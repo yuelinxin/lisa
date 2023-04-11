@@ -1,0 +1,76 @@
+% this is a lisa test file
+
+% this is a single line comment
+
+%%
+    this is a multi-line comment
+    this is a multi-line comment
+%%
+
+use math, tensor
+use {
+    lib_1,
+    lib_2,
+    lib_3
+}
+
+% calculate the area of a circle
+@CPU
+fn area_of_circle(radius) {
+    if radius <= 0 {
+        return 0
+    }
+    area: math.pi * radius ^ 2
+    return area
+}
+
+% load dataset using CPU multithreading
+@CPU(mode: "multithread")
+fn load_dataset(path) {
+    % load dataset from path
+    return dataset
+}
+
+% a function with jit compilation
+@CPU @JIT
+fn add(a, b) {
+    return a + b
+}
+% no decoration will default to CPU
+fn add_2(a, b) {
+    return a + b
+}
+
+% calculate a tensor multiplication
+@GPU(mode: "cuda")
+fn tensor_mult(a, b) {
+    if a.shape != b.shape {
+        return 0
+    }
+    c: a * b
+    return c
+}
+
+% calculate the softmax of a tensor
+@GPU(mode: "cuda")
+fn softmax(x) {
+    exps: math.exp(x)
+    sum: math.sum(exps)
+    return exps / sum
+}
+
+r: 5
+area: area_of_circle(r)
+
+tensor a: [1, 2, 3, 4]
+tensor b: [2, 3, 4, 5]
+tensor c: tensor_mult(a, b)
+
+test_num: 3.14*(8/4)
+test_num_2 *: 2
+test_num_3 /: 2
+
+out: "The area of the circle is " + area
+
+%%
+    Error: comment end with EOF

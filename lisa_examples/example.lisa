@@ -1,0 +1,95 @@
+% This is a sample of a typical .lsa file
+
+%%
+    This is a sample of a multiple line comment
+%%
+
+% include the libraries you need
+@library: lib1, lib2, lib3
+
+% include your own library
+@link: {app.myclass1, app.myclass2, test.mytest1}
+
+% creating a variable
+a: 1
+b: "hello"
+c: true
+d: 1.5
+% or you can specify the type keyword
+int a: 1
+str b: "hello"
+bool c: true
+float d: 1.5
+
+% a hello world function example
+func hello() {
+    output "Hello World!"
+}
+
+% a function with parameters
+func add(a, b) {
+    output a + b
+}
+
+% a function with a return value
+func add(a, b) {
+    return a + b
+}
+
+% a function with a return value and a type
+int func add(a, b) {
+    return a + b
+}
+
+% an if statement example (we use = instead of ==)
+if a = 1 {
+    output("a is 1")
+}
+else {
+    output("a is not 1")
+}
+
+% another if statement example (you can also use is instead of =)
+if a is 1 or b is "hello" {
+    output("Intel, yes!")
+}
+else {
+    output("AMD, yes!")
+}
+
+% a class example
+class Person {
+    % fields
+    field: {name, age, gender}
+    % or you can give them default values
+    field: {name: "John", age: 20, gender: "male"}
+    % or you can specify the type keyword
+    field: {str name: "John", int age: 20, str gender: "male"}
+
+    % a constructor example
+    action init(name, age, gender) {
+        field.name: name
+        field.age: age
+        field.gender: gender
+    }
+
+    % an action example (a function inside a class)
+    action sayHello() {
+        output("Hello, my name is " + field.name)
+    }
+
+    % a getter example
+    action getName() {
+        return field.name
+    }
+}
+
+% a class example with inheritance
+class Student(Person) {
+    ...
+}
+
+% a class example with multiple inheritance
+class Student(Person, Teenager) {
+    ...
+}

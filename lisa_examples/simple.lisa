@@ -1,0 +1,30 @@
+% a test comment
+
+%%
+    a block comment
+    with multiple lines
+%%
+
+% function definition
+fn foo(a,b) {
+    a + b * 2
+}
+
+% function declaration
+extern bar(a)
+
+% function calls
+foo(1, 2)
+bar(1)
+
+% binary operations
+3 + 4 * 5
+1 / 2
+3 = 3
+2 > 3
+
+% variable assignment
+% a: 1
+% b: 3.14
+% c: 2 * 5 ^ 4
+% d: 2 * (5 ^ 4)
