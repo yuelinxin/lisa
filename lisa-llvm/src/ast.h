@@ -13,6 +13,7 @@
 #pragma once
 
 #include <string>
+#include <utility>
 #include <vector>
 #include <map>
 #include "llvm/ADT/APFloat.h"
@@ -26,7 +27,6 @@
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Type.h"
 #include "llvm/IR/Verifier.h"
-using namespace std;
 using namespace llvm;
 
 
@@ -42,10 +42,10 @@ class FunctionAST;
 
 class CodeGenVisitor 
 {
-    unique_ptr<LLVMContext> context;
+    std::unique_ptr<LLVMContext> context;
     IRBuilder<> builder;
-    unique_ptr<Module> module;
-    map<string, Value*> namedValues;
+    std::unique_ptr<Module> module;
+    std::map<std::string, Value*> namedValues;
 public:
     CodeGenVisitor();
     virtual ~CodeGenVisitor() = default;
@@ -71,8 +71,8 @@ class NumberExprAST : public ExprAST
 public:
     double val;
 public:
-    NumberExprAST(string valStr) {
-        val = strtod(valStr.c_str(), 0);
+    explicit NumberExprAST(const std::string& valStr) {
+        val = strtod(valStr.c_str(), nullptr);
     }
     Value* accept(CodeGenVisitor &v) override {
         return v.visit(this);
@@ -83,9 +83,9 @@ public:
 class VariableExprAST : public ExprAST
 {
 public:
-    string name;
+    std::string name;
 public:
-    VariableExprAST(string name) : name(name) {}
+    explicit VariableExprAST(std::string name) : name(std::move(name)) {}
     Value* accept(CodeGenVisitor &v) override {
         return v.visit(this);
     }
@@ -96,10 +96,10 @@ class BinaryExprAST : public ExprAST
 {
 public:
     char op;
-    unique_ptr<ExprAST> lhs, rhs;
+    std::unique_ptr<ExprAST> lhs, rhs;
 public:
-    BinaryExprAST(char op, unique_ptr<ExprAST>lhs, 
-                  unique_ptr<ExprAST>rhs) : 
+    BinaryExprAST(char op, std::unique_ptr<ExprAST>lhs,
+                  std::unique_ptr<ExprAST>rhs) :
         op(op), lhs(move(lhs)), rhs(move(rhs)) {}
     Value* accept(CodeGenVisitor &v) override {
         return v.visit(this);
@@ -110,12 +110,12 @@ public:
 class CallExprAST : public ExprAST
 {
 public:
-    string callee;
-    vector<unique_ptr<ExprAST> > args;
+    std::string callee;
+    std::vector<std::unique_ptr<ExprAST> > args;
 public:
-    CallExprAST(string callee, 
-                vector<unique_ptr<ExprAST> > args) : 
-        callee(callee), args(move(args)) {}
+    CallExprAST(std::string callee,
+                std::vector<std::unique_ptr<ExprAST> > args) :
+        callee(std::move(callee)), args(move(args)) {}
     Value* accept(CodeGenVisitor &v) override {
         return v.visit(this);
     }
@@ -125,12 +125,12 @@ public:
 class PrototypeAST
 {
 public:
-    string name;
-    vector<string> args;
+    std::string name;
+    std::vector<std::string> args;
 public:
-    PrototypeAST(string name, vector<string> args) : 
-        name(name), args(move(args)) {}
-    const string& getName() const { return name; }
+    PrototypeAST(std::string name, std::vector<std::string> args) :
+        name(std::move(name)), args(move(args)) {}
+    const std::string& getName() const { return name; }
     Function* accept(CodeGenVisitor &v) {
         return v.visit(this);
     }
@@ -140,11 +140,11 @@ public:
 class FunctionAST
 {
 public:
-    unique_ptr<PrototypeAST> proto;
-    unique_ptr<ExprAST> body;
+    std::unique_ptr<PrototypeAST> proto;
+    std::unique_ptr<ExprAST> body;
 public:
-    FunctionAST(unique_ptr<PrototypeAST> proto, 
-                unique_ptr<ExprAST> body) : 
+    FunctionAST(std::unique_ptr<PrototypeAST> proto,
+                std::unique_ptr<ExprAST> body) :
         proto(move(proto)), body(move(body)) {}
     Function* accept(CodeGenVisitor &v) {
         return v.visit(this);

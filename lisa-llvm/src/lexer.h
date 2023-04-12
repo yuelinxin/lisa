@@ -16,23 +16,25 @@
 #include <fstream>
 #include "token.h"
 
+
 class Lexer 
 {
 public:
-    Lexer(std::string file);
+    explicit Lexer(const std::string& file);
     ~Lexer();
     Token getTok(Lexer *lex);
     Token peekTok(Lexer *lex);
 private:
-    int getChar(Lexer *lex);
-    int peekChar(Lexer *lex);
-    void skipLineComment(Lexer *lex);
-    int skipBlockComment(Lexer *lex);
+    static int getChar(Lexer *lex);
+    static int peekChar(Lexer *lex);
+    static void skipLineComment(Lexer *lex);
+    static int skipBlockComment(Lexer *lex);
     // lexer state
     std::ifstream file; // input file
     bool nl_buffer;     // newline buffer
     int ln;             // line number
     int col;            // column number
 };
+
 
 #endif

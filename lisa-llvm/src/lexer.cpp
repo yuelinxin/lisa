@@ -11,14 +11,14 @@
 
 
 // initialize the lexer
-Lexer::Lexer(std::string file) {
+Lexer::Lexer(const std::string& file) {
     this->file.open(file);
     if (!this->file.is_open()) {
         std::cerr << "Error: could not open file " 
             << file << std::endl;
         exit(1);
     }
-    this->nl_buffer = 0;
+    this->nl_buffer = false;
     this->ln = 1;
     this->col = 1;
 }

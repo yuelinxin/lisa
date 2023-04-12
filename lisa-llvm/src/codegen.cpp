@@ -89,7 +89,7 @@ Value *CodeGenVisitor::visit(CallExprAST *node) {
         return codeGenError("Unknown function referenced");
     if (calleeF->arg_size() != node->args.size())
         return codeGenError("Incorrect # arguments passed");
-    vector<Value *> argsV;
+    std::vector<Value *> argsV;
     for (auto &arg : node->args) {
         argsV.push_back(arg->accept(*this));
         if (!argsV.back())
@@ -123,7 +123,7 @@ Function *CodeGenVisitor::visit(FunctionAST *node) {
 
 // for PrototypeAST
 Function *CodeGenVisitor::visit(PrototypeAST *node) {
-    vector<Type *> doubles(node->args.size(), Type::getDoubleTy(*context));
+    std::vector<Type *> doubles(node->args.size(), Type::getDoubleTy(*context));
     FunctionType *ft = FunctionType::get(Type::getDoubleTy(*context), doubles, false);
     Function *f = Function::Create(ft, Function::ExternalLinkage, node->name, module.get());
     unsigned idx = 0;
@@ -177,10 +177,6 @@ static void mainLoop(Lexer *lex, CodeGenVisitor *codegen) {
     while (true) {
         Token t = lex->peekTok(lex);
         switch (t.tp) {
-            // case TOK_SYM:
-            //     if (t.lx == ";")
-            //         lex->getTok(lex);
-            //     break;
             case TOK_EOF:
                 return;
             case TOK_FN:
@@ -199,8 +195,8 @@ static void mainLoop(Lexer *lex, CodeGenVisitor *codegen) {
 
 #ifndef PRODUCTION
 int main() {
-    Lexer *lex = new Lexer("../lisa_examples/simple.lisa");
-    CodeGenVisitor *codegen = new CodeGenVisitor();
+    auto *lex = new Lexer("../lisa_examples/simple.lisa");
+    auto *codegen = new CodeGenVisitor();
     std::cout << "Lisa Compiler Ready >" << std::endl;
     mainLoop(lex, codegen);
     delete codegen;
