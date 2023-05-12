@@ -1,5 +1,4 @@
-<img height="100" alt="LLVMWyvernSmall" src="https://github.com/MiracleFactory/lisa/assets/89094576/cc6a34e4-3006-4d02-bab9-64387eb1bc93">
-<img height="100" alt="lisa" src="https://github.com/MiracleFactory/lisa/assets/89094576/c1645115-8669-488d-bc10-7c1e747c79d8">
+# <img height="100" alt="LLVMWyvernSmall" src="https://github.com/MiracleFactory/lisa/assets/89094576/cc6a34e4-3006-4d02-bab9-64387eb1bc93"><img height="100" alt="lisa" src="https://github.com/MiracleFactory/lisa/assets/89094576/c1645115-8669-488d-bc10-7c1e747c79d8">
 
 ### What is *lisa*?
 *lisa* is an experimental programming language and compiler architecture designed for the simplest and easiest implementation of high performance AI/ML systems.
