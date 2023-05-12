@@ -1,4 +1,4 @@
-# <img height="100" alt="LLVMWyvernSmall" src="https://github.com/MiracleFactory/lisa/assets/89094576/cc6a34e4-3006-4d02-bab9-64387eb1bc93"><img height="100" alt="lisa" src="https://github.com/MiracleFactory/lisa/assets/89094576/c1645115-8669-488d-bc10-7c1e747c79d8">
+# <img height="75" alt="lisa" src="https://github.com/MiracleFactory/lisa/assets/89094576/a64c8393-1d6e-4d30-b13c-400c09993e09">
 
 ### What is *lisa*?
 *lisa* is an experimental programming language and compiler architecture designed for the simplest and easiest implementation of high performance AI/ML systems.
@@ -8,3 +8,8 @@ The *lisa* compiler is only a frontend for the LLVM compiler infrastructure. It 
 
 ### The Language
 The *lisa* programming language is a simple and easy-to-use language designed for the development of machine learning software. It integrates commonly used tools and libraries in AI/ML systems development into its standard library, which will make it fast and easy to implement an intelligent system for research and production alike.
+
+
+<div align="center">
+<h3><img height="16" alt="LLVMWyvernSmall" src="https://github.com/MiracleFactory/lisa/assets/89094576/fef16dba-2402-4c62-ac96-83954f15b55c"> LLVM</h3>
+</div>
