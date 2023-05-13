@@ -1,4 +1,4 @@
-# <img height="75" alt="lisa" src="https://github.com/MiracleFactory/lisa/assets/89094576/a64c8393-1d6e-4d30-b13c-400c09993e09">
+# The lisa programming language
 
 
 ### What is *lisa*?
