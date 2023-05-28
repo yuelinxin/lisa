@@ -1,9 +1,9 @@
 /**
  * @file codegen.cpp
- * @version 0.1.0
+ * @version 0.1.1
  * @date 2023-04-10
  * 
- * @copyright Copyright Miracle Factory (c) 2022
+ * @copyright Copyright Miracle Factory (c) 2023
  * 
  */
 
@@ -24,7 +24,17 @@ Value *codeGenError(const char *str) {
 CodeGenVisitor::CodeGenVisitor() : 
     context(std::make_unique<LLVMContext>()), 
     builder(*context), 
-    module(std::make_unique<Module>("lisa", *context)) {}
+    module(std::make_unique<Module>("lisa", *context)),
+    fpm(std::make_unique<legacy::FunctionPassManager>(module.get()))
+    // jit(std::make_unique<lisa::LisaJIT>()) 
+    {
+        fpm->add(createInstructionCombiningPass());
+        fpm->add(createReassociatePass());
+        fpm->add(createGVNPass());
+        fpm->add(createCFGSimplificationPass());
+        fpm->doInitialization();
+        // module->setDataLayout(jit->getDataLayout());
+    }
 
 
 // for NumberExprAST
@@ -114,6 +124,7 @@ Function *CodeGenVisitor::visit(FunctionAST *node) {
     if (Value *retVal = node->body->accept(*this)) {
         builder.CreateRet(retVal);
         verifyFunction(*theFunction);
+        fpm->run(*theFunction); // function pass optimize
         return theFunction;
     }
     theFunction->eraseFromParent();
@@ -193,8 +204,12 @@ static void mainLoop(Lexer *lex, CodeGenVisitor *codegen) {
 }
 
 
-#ifndef PRODUCTION
+#define TEST_CODEGEN
+#ifdef TEST_CODEGEN
 int main() {
+    InitializeNativeTarget();
+    InitializeNativeTargetAsmPrinter();
+    InitializeNativeTargetAsmParser();
     auto *lex = new Lexer("../lisa_examples/simple.lisa");
     auto *codegen = new CodeGenVisitor();
     std::cout << "Lisa Compiler Ready >" << std::endl;

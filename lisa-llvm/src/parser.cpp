@@ -1,9 +1,9 @@
 /**
  * @file parser.cpp
- * @version 0.1.0
+ * @version 0.1.1
  * @date 2022-12-29
  * 
- * @copyright Copyright Miracle Factory (c) 2022
+ * @copyright Copyright Miracle Factory (c) 2023
  * 
  */
 
@@ -46,7 +46,7 @@ std::unique_ptr<ExprAST> NumberExpr(Lexer *lex) {
     Token t;
     GET_TOK
     auto result = std::make_unique<NumberExprAST>(t.lx);
-    return move(result);
+    return std::move(result);
 }
 
 
@@ -87,7 +87,7 @@ std::unique_ptr<ExprAST> IdentifierExpr(Lexer *lex) {
             auto arg = Expr(lex);
             if (!arg)
                 return nullptr;
-            args.push_back(move(arg));
+            args.push_back(std::move(arg));
             PEEK_TOK // t is ")" or ","
             if (MATCH_TOK(TOK_SYM, ")")) {
                 GET_TOK // t is ")"
@@ -98,7 +98,7 @@ std::unique_ptr<ExprAST> IdentifierExpr(Lexer *lex) {
             GET_TOK // t is ","
         }
     }
-    return std::make_unique<CallExprAST>(idName, move(args));
+    return std::make_unique<CallExprAST>(idName, std::move(args));
 }
 
 
@@ -124,7 +124,7 @@ std::unique_ptr<ExprAST> Expr(Lexer *lex) {
     auto lhs = Primary(lex);
     if (!lhs)
         return nullptr;
-    return BinOpRHS(lex, 0, move(lhs));
+    return BinOpRHS(lex, 0, std::move(lhs));
 }
 
 
@@ -145,11 +145,11 @@ std::unique_ptr<ExprAST> BinOpRHS(Lexer *lex, int exprPrec,
         PEEK_TOK // t is operator
         int nextPrec = getBinopPrecedence(t.lx[0]);
         if (tokPrec < nextPrec) {
-            rhs = BinOpRHS(lex, tokPrec + 1, move(rhs));
+            rhs = BinOpRHS(lex, tokPrec + 1, std::move(rhs));
             if (!rhs)
                 return nullptr;
         }
-        lhs = std::make_unique<BinaryExprAST>(binop, move(lhs), move(rhs));
+        lhs = std::make_unique<BinaryExprAST>(binop, std::move(lhs), std::move(rhs));
     }
 }
 
@@ -181,7 +181,7 @@ std::unique_ptr<PrototypeAST> Prototype(Lexer *lex) {
     }
     if (!(MATCH_TOK(TOK_SYM, ")")))
         ERROR("Expected ')' in prototype")
-    return std::make_unique<PrototypeAST>(fnName, move(argNames));
+    return std::make_unique<PrototypeAST>(fnName, std::move(argNames));
 }
 
 
@@ -203,7 +203,7 @@ std::unique_ptr<FunctionAST> Definition(Lexer *lex) {
     GET_TOK // t is "}"
     if (!(MATCH_TOK(TOK_SYM, "}")))
         ERROR("Expected '}' in definition")
-    return std::make_unique<FunctionAST>(move(proto), move(e));
+    return std::make_unique<FunctionAST>(std::move(proto), std::move(e));
 }
 
 
@@ -221,19 +221,19 @@ std::unique_ptr<PrototypeAST> Extern(Lexer *lex) {
 std::unique_ptr<FunctionAST> TopLevelExpr(Lexer *lex) {
     if (auto e = Expr(lex)) {
         auto proto = std::make_unique<PrototypeAST>("", std::vector<std::string>());
-        return std::make_unique<FunctionAST>(move(proto), move(e));
+        return std::make_unique<FunctionAST>(std::move(proto), std::move(e));
     }
     return nullptr;
 }
 
 
-// #ifndef PRODUCTION
-// int main() {
-//     Lexer *lex = new Lexer("simple.lisa");
-//     cout << "Lisa Compiler Ready >" << endl;
-//     mainLoop(lex);
-//     cout << "Parsing Complete." << endl;
-//     delete lex;
-//     return 0;
-// }
-// #endif
+#ifdef TEST_PARSER
+int main() {
+    Lexer *lex = new Lexer("simple.lisa");
+    cout << "Lisa Compiler Ready >" << endl;
+    mainLoop(lex);
+    cout << "Parsing Complete." << endl;
+    delete lex;
+    return 0;
+}
+#endif

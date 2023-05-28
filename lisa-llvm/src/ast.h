@@ -1,9 +1,9 @@
 /**
  * @file ast.h
- * @version 0.1.0
+ * @version 0.1.1
  * @date 2023-04-08
  * 
- * @copyright Copyright Miracle Factory (c) 2022
+ * @copyright Copyright Miracle Factory (c) 2023
  * 
  */
 
@@ -27,6 +27,13 @@
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Type.h"
 #include "llvm/IR/Verifier.h"
+#include "llvm/IR/LegacyPassManager.h"
+#include "llvm/Support/TargetSelect.h"
+#include "llvm/Target/TargetMachine.h"
+#include "llvm/Transforms/InstCombine/InstCombine.h"
+#include "llvm/Transforms/Scalar.h"
+#include "llvm/Transforms/Scalar/GVN.h"
+#include "jit.h"
 using namespace llvm;
 
 
@@ -42,9 +49,12 @@ class FunctionAST;
 
 class CodeGenVisitor 
 {
+private:
     std::unique_ptr<LLVMContext> context;
     IRBuilder<> builder;
     std::unique_ptr<Module> module;
+    std::unique_ptr<legacy::FunctionPassManager> fpm;
+    std::unique_ptr<lisa::LisaJIT> jit;
     std::map<std::string, Value*> namedValues;
 public:
     CodeGenVisitor();
@@ -100,7 +110,7 @@ public:
 public:
     BinaryExprAST(char op, std::unique_ptr<ExprAST>lhs,
                   std::unique_ptr<ExprAST>rhs) :
-        op(op), lhs(move(lhs)), rhs(move(rhs)) {}
+        op(op), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
     Value* accept(CodeGenVisitor &v) override {
         return v.visit(this);
     }
@@ -115,7 +125,7 @@ public:
 public:
     CallExprAST(std::string callee,
                 std::vector<std::unique_ptr<ExprAST> > args) :
-        callee(std::move(callee)), args(move(args)) {}
+        callee(std::move(callee)), args(std::move(args)) {}
     Value* accept(CodeGenVisitor &v) override {
         return v.visit(this);
     }
@@ -129,7 +139,7 @@ public:
     std::vector<std::string> args;
 public:
     PrototypeAST(std::string name, std::vector<std::string> args) :
-        name(std::move(name)), args(move(args)) {}
+        name(std::move(name)), args(std::move(args)) {}
     const std::string& getName() const { return name; }
     Function* accept(CodeGenVisitor &v) {
         return v.visit(this);
@@ -145,7 +155,7 @@ public:
 public:
     FunctionAST(std::unique_ptr<PrototypeAST> proto,
                 std::unique_ptr<ExprAST> body) :
-        proto(move(proto)), body(move(body)) {}
+        proto(std::move(proto)), body(std::move(body)) {}
     Function* accept(CodeGenVisitor &v) {
         return v.visit(this);
     }

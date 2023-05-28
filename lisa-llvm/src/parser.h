@@ -1,9 +1,9 @@
 /**
  * @file parser.h
- * @version 0.1.0
+ * @version 0.1.1
  * @date 2023-04-08
  * 
- * @copyright Copyright Miracle Factory (c) 2022
+ * @copyright Copyright Miracle Factory (c) 2023
  * 
  */
 

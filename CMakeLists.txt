@@ -9,7 +9,14 @@ include_directories(${LLVM_INCLUDE_DIRS})
 
 add_definitions(${LLVM_DEFINITIONS})
 
-llvm_map_components_to_libnames(llvm_libs support core irreader)
+llvm_map_components_to_libnames(
+        llvm_libs 
+        support 
+        core 
+        irreader 
+        scalaropts
+        orcjit
+        native)
 
 add_executable(lisa
         lisa-llvm/src/lexer.h

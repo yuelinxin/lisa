@@ -1,9 +1,9 @@
 /**
  * @file lexer.cpp
- * @version 0.1.0
+ * @version 0.1.1
  * @date 2022-12-29
  * 
- * @copyright Copyright Miracle Factory (c) 2022
+ * @copyright Copyright Miracle Factory (c) 2023
  * 
  */
 
@@ -191,21 +191,21 @@ Token Lexer::peekTok(Lexer *lex) {
 }
 
 
-// #ifndef PRODUCTION
-// void printTok(Token t) {
-//     std::cout << "<" << getTokenTypeString(t.tp) << ", " << t.lx 
-//         << ", " << t.ln << ", " << t.col << ">" << std::endl;
-// }
+#ifdef TEST_LEXER
+void printTok(Token t) {
+    std::cout << "<" << getTokenTypeString(t.tp) << ", " << t.lx 
+        << ", " << t.ln << ", " << t.col << ">" << std::endl;
+}
 
 
-// int main() {
-//     Lexer *lex = new Lexer("test.lisa");
-//     Token t;
-//     do {
-//         t = lex->getTok(lex);
-//         printTok(t);
-//     } while (t.tp != TOK_EOF);
-//     delete lex;
-//     return 0;
-// }
-// #endif
+int main() {
+    Lexer *lex = new Lexer("test.lisa");
+    Token t;
+    do {
+        t = lex->getTok(lex);
+        printTok(t);
+    } while (t.tp != TOK_EOF);
+    delete lex;
+    return 0;
+}
+#endif
