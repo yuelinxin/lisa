@@ -13,3 +13,4 @@ The *lisa* programming language is a simple and easy-to-use language designed fo
 ---
 
 <img height="65" alt="llvm" src="https://github.com/MiracleFactory/lisa/assets/89094576/e194ddff-48b7-421d-b470-c2f185ca3350">
+<img height="65" alt="llvm" src="https://github.com/MiracleFactory/lisa/assets/80749465/23f1622c-4567-4137-8cbb-c61d0ff2da94">
