@@ -28,6 +28,7 @@ CodeGenVisitor::CodeGenVisitor() :
     fpm(std::make_unique<legacy::FunctionPassManager>(module.get()))
     // jit(std::make_unique<lisa::LisaJIT>()) 
     {
+        // add all the passes
         fpm->add(createInstructionCombiningPass());
         fpm->add(createReassociatePass());
         fpm->add(createGVNPass());
@@ -46,8 +47,10 @@ Value *CodeGenVisitor::visit(NumberExprAST *node) {
 // for VariableExprAST
 Value *CodeGenVisitor::visit(VariableExprAST *node) {
     Value *v = namedValues[node->name];
-    if (!v)
-        return codeGenError("Unknown variable name");
+    if (!v) {
+        string err = "Undefined identifier: " + node->name;
+        return codeGenError(err.c_str());
+    }
     return v;
 }
 
@@ -59,15 +62,23 @@ Value *CodeGenVisitor::visit(BinaryExprAST *node) {
     if (!lhs || !rhs)
         return nullptr;
     switch (node->op) {
-        // case ':':
-        //     ExprAST* lhsExpr = node->lhs.get();
-        //     if (VariableExprAST *lhsVar = static_cast<VariableExprAST*>(lhsExpr)) {
-        //         namedValues[lhsVar->name] = rhs;
-        //         return rhs;
-        //     } else {
-        //         codeGenError("invalid left-hand side of assignment");
-        //         return nullptr;
-        //     }
+        case ':':
+            // variable assignment, create new variable if not exists
+            if (VariableExprAST *lhsVar = dynamic_cast<VariableExprAST *>(node->lhs.get())) {
+                Value *varValue = namedValues[lhsVar->name];
+                // if (!varValue) {
+                //     // create new variable
+                //     AllocaInst *alloca = builder.CreateAlloca(Type::getDoubleTy(*context), nullptr, lhsVar->name.c_str());
+                //     varValue = alloca;
+                //     // store the variable in the namedValues map
+                //     namedValues[lhsVar->name] = varValue;
+                // }
+                builder.CreateStore(rhs, varValue);
+                return rhs;
+            } else {
+                codeGenError("Invalid left-hand side of assignment");
+                return nullptr;
+            }
         case '+':
             return builder.CreateFAdd(lhs, rhs, "addtmp");
         case '-':
@@ -92,13 +103,58 @@ Value *CodeGenVisitor::visit(BinaryExprAST *node) {
 }
 
 
+// for IfExprAST
+Value *CodeGenVisitor::visit(IfExprAST *node) {
+    Value *condV = node->cond->accept(*this);
+    if (!condV)
+        return nullptr;
+    condV = builder.CreateFCmpONE(
+        condV, ConstantFP::get(*context, APFloat(0.0)), "ifcond");
+    Function *theFunction = builder.GetInsertBlock()->getParent();
+    BasicBlock *ifBodyBB = BasicBlock::Create(*context, "ifbody", theFunction);
+    BasicBlock *elseBodyBB = BasicBlock::Create(*context, "elsebody");
+    BasicBlock *mergeBB = BasicBlock::Create(*context, "ifcont");
+    builder.CreateCondBr(condV, ifBodyBB, elseBodyBB);
+
+    // Generate code for the "if" body
+    builder.SetInsertPoint(ifBodyBB);
+    Value *ifBodyV = nullptr;
+    for (auto &expr : node->if_body)
+        ifBodyV = expr->accept(*this);
+    builder.CreateBr(mergeBB);
+    ifBodyBB = builder.GetInsertBlock();
+
+    // Generate code for the "else" body (if it exists)
+    theFunction->getBasicBlockList().push_back(elseBodyBB);
+    builder.SetInsertPoint(elseBodyBB);
+    Value *elseBodyV = nullptr;
+    if (node->els_body.size() > 0)
+        for (auto &expr : node->els_body)
+            elseBodyV = expr->accept(*this);
+    builder.CreateBr(mergeBB);
+    elseBodyBB = builder.GetInsertBlock();
+
+    // Generate code for the merge block
+    theFunction->getBasicBlockList().push_back(mergeBB);
+    builder.SetInsertPoint(mergeBB);
+    PHINode *phiNode = builder.CreatePHI(Type::getDoubleTy(*context), 2, "iftmp");
+    phiNode->addIncoming(ifBodyV, ifBodyBB);
+    if (elseBodyV)
+        phiNode->addIncoming(elseBodyV, elseBodyBB);
+
+    return phiNode;
+}
+
+
 // for CallExprAST
 Value *CodeGenVisitor::visit(CallExprAST *node) {
     Function *calleeF = module->getFunction(node->callee);
-    if (!calleeF)
-        return codeGenError("Unknown function referenced");
+    if (!calleeF) {
+        string err = "Unknown function referenced: " + node->callee;
+        return codeGenError(err.c_str());
+    }
     if (calleeF->arg_size() != node->args.size())
-        return codeGenError("Incorrect # arguments passed");
+        return codeGenError("Incorrect number of arguments passed");
     std::vector<Value *> argsV;
     for (auto &arg : node->args) {
         argsV.push_back(arg->accept(*this));
@@ -121,14 +177,19 @@ Function *CodeGenVisitor::visit(FunctionAST *node) {
     namedValues.clear();
     for (auto &arg : theFunction->args())
         namedValues[string(arg.getName())] = &arg;
-    if (Value *retVal = node->body->accept(*this)) {
-        builder.CreateRet(retVal);
-        verifyFunction(*theFunction);
-        fpm->run(*theFunction); // function pass optimize
-        return theFunction;
+    // code gen for function body
+    for (auto &expr : node->body) {
+        // if the expr is the last one, generate as return value
+        if (expr == node->body.back())
+            builder.CreateRet(expr->accept(*this));
+        else if (!expr->accept(*this)) {
+            theFunction->eraseFromParent();
+            return nullptr;
+        }
     }
-    theFunction->eraseFromParent();
-    return nullptr;
+    verifyFunction(*theFunction);
+    fpm->run(*theFunction); // function pass optimize
+    return theFunction;
 }
 
 

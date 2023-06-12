@@ -6,6 +6,7 @@
  * @copyright Copyright Miracle Factory (c) 2023
  * 
  */
+
 #ifndef TOKEN_H
 #define TOKEN_H
 
@@ -17,6 +18,7 @@ using std::string;
 
 
 enum TokenType {
+    TOK_NEWLINE,
     TOK_EOF,
     TOK_ERR,
     // primary
@@ -24,9 +26,12 @@ enum TokenType {
     TOK_NUM,
     TOK_SYM,
     TOK_STR,
-    // commands
+    // keywords
     TOK_FN,
     TOK_EXTERN,
+    TOK_IF,
+    TOK_ELSE,
+    TOK_FOR,
 };
 
 
@@ -71,6 +76,7 @@ static bool isSingleSymbol(char c) {
         case '&': // logical and
         case '|': // logical or
         case '~': // logical xor
+        case ';':
             return true;
         default:
             return false;
@@ -167,6 +173,7 @@ static int getBinopPrecedence(char op) {
 
 static string getTokenTypeString(TokenType tp) {
     switch (tp) {
+        case TOK_NEWLINE: return "TOK_NEWLINE";
         case TOK_EOF: return "TOK_EOF";
         case TOK_ERR: return "TOK_ERR";
         case TOK_ID: return "TOK_ID";
@@ -175,6 +182,9 @@ static string getTokenTypeString(TokenType tp) {
         case TOK_STR: return "TOK_STR";
         case TOK_FN: return "TOK_FN";
         case TOK_EXTERN: return "TOK_EXTERN";
+        case TOK_IF: return "TOK_IF";
+        case TOK_ELSE: return "TOK_ELSE";
+        case TOK_FOR: return "TOK_FOR";
         default: return "TOK_UNKNOWN";
     }
 }

@@ -42,6 +42,8 @@ class ExprAST;
 class NumberExprAST;
 class VariableExprAST;
 class BinaryExprAST;
+class IfExprAST;
+// class ForExprAST;
 class CallExprAST;
 class PrototypeAST;
 class FunctionAST;
@@ -62,6 +64,8 @@ public:
     virtual Value* visit(NumberExprAST *node);
     virtual Value* visit(VariableExprAST *node);
     virtual Value* visit(BinaryExprAST *node);
+    virtual Value* visit(IfExprAST *node);
+    // virtual Value* visit(ForExprAST *node);
     virtual Value* visit(CallExprAST *node);
     virtual Function* visit(PrototypeAST *node);
     virtual Function* visit(FunctionAST *node);
@@ -117,14 +121,31 @@ public:
 };
 
 
+class IfExprAST : public ExprAST
+{
+public:
+    std::unique_ptr<ExprAST> cond;
+    std::vector<std::unique_ptr<ExprAST>> if_body, els_body;
+public:
+    IfExprAST(std::unique_ptr<ExprAST> cond, 
+              std::vector<std::unique_ptr<ExprAST>> if_body,
+              std::vector<std::unique_ptr<ExprAST>> els_body) :
+        cond(std::move(cond)), if_body(std::move(if_body)), 
+        els_body(std::move(els_body)) {}
+    Value* accept(CodeGenVisitor &v) override {
+        return v.visit(this);
+    }
+};
+
+
 class CallExprAST : public ExprAST
 {
 public:
     std::string callee;
-    std::vector<std::unique_ptr<ExprAST> > args;
+    std::vector<std::unique_ptr<ExprAST>> args;
 public:
     CallExprAST(std::string callee,
-                std::vector<std::unique_ptr<ExprAST> > args) :
+                std::vector<std::unique_ptr<ExprAST>> args) :
         callee(std::move(callee)), args(std::move(args)) {}
     Value* accept(CodeGenVisitor &v) override {
         return v.visit(this);
@@ -151,10 +172,10 @@ class FunctionAST
 {
 public:
     std::unique_ptr<PrototypeAST> proto;
-    std::unique_ptr<ExprAST> body;
+    std::vector<std::unique_ptr<ExprAST>> body;
 public:
     FunctionAST(std::unique_ptr<PrototypeAST> proto,
-                std::unique_ptr<ExprAST> body) :
+                std::vector<std::unique_ptr<ExprAST>> body) :
         proto(std::move(proto)), body(std::move(body)) {}
     Function* accept(CodeGenVisitor &v) {
         return v.visit(this);

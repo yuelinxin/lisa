@@ -29,7 +29,6 @@
 
 namespace lisa
 {
-
 class LisaJIT
 {
 private:
@@ -91,10 +90,7 @@ public:
     llvm::Expected<llvm::JITEvaluatedSymbol> lookup(llvm::StringRef name) {
         return es->lookup({&mainJD}, mangle(name.str()));
     }
-
-
 };
-
 }
 
 

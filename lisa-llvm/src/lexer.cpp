@@ -112,6 +112,12 @@ Token Lexer::getTok(Lexer *lex) {
         }
     }
 
+    // newline token
+    // if (c == '\n') {
+    //     setToken(&t, TOK_NEWLINE, "\\n", lex->ln, lex->col);
+    //     return t;
+    // }
+
     // identifiers or keywords
     if (isalpha(c) || c == '_') { 
         id = c;
@@ -123,6 +129,12 @@ Token Lexer::getTok(Lexer *lex) {
             setToken(&t, TOK_FN, id, lex->ln, lex->col);
         else if (id == "extern")
             setToken(&t, TOK_EXTERN, id, lex->ln, lex->col);
+        else if (id == "if")
+            setToken(&t, TOK_IF, id, lex->ln, lex->col);
+        else if (id == "else")
+            setToken(&t, TOK_ELSE, id, lex->ln, lex->col);
+        else if (id == "for")
+            setToken(&t, TOK_FOR, id, lex->ln, lex->col);
         else
             setToken(&t, TOK_ID, id, lex->ln, lex->col);
     }
@@ -191,6 +203,7 @@ Token Lexer::peekTok(Lexer *lex) {
 }
 
 
+// #define TEST_LEXER
 #ifdef TEST_LEXER
 void printTok(Token t) {
     std::cout << "<" << getTokenTypeString(t.tp) << ", " << t.lx 
@@ -199,7 +212,7 @@ void printTok(Token t) {
 
 
 int main() {
-    Lexer *lex = new Lexer("test.lisa");
+    Lexer *lex = new Lexer("../lisa_examples/simple.lisa");
     Token t;
     do {
         t = lex->getTok(lex);

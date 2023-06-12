@@ -26,6 +26,7 @@ void parseError(const char *str, const Token& t) {
 
 
 // getTok wrapper function
+// this wrapper function is here to add debug info
 Token GetTok(Lexer *lex) {
     Token t = lex->getTok(lex);
     // cout << "token: " << t.lx << ", " 
@@ -35,6 +36,7 @@ Token GetTok(Lexer *lex) {
 
 
 // peekTok wrapper function
+// this wrapper function is here to add debug info
 Token PeekTok(Lexer *lex) {
     Token t = lex->peekTok(lex);
     return t;
@@ -78,7 +80,7 @@ std::unique_ptr<ExprAST> IdentifierExpr(Lexer *lex) {
         return std::make_unique<VariableExprAST>(idName);
     GET_TOK // t is "("
     PEEK_TOK // t is ")" or expression
-    std::vector<std::unique_ptr<ExprAST> > args;
+    std::vector<std::unique_ptr<ExprAST>> args;
     if (MATCH_TOK(TOK_SYM, ")")) {
         GET_TOK // t is ")"
     }
@@ -112,6 +114,8 @@ std::unique_ptr<ExprAST> Primary(Lexer *lex) {
         return ParenExpr(lex);
     if (t.tp == TOK_ID)
         return IdentifierExpr(lex);
+    if (t.tp == TOK_IF)
+        return IfExpr(lex);
     if (t.tp == TOK_EOF)
         return nullptr;
     else
@@ -154,6 +158,56 @@ std::unique_ptr<ExprAST> BinOpRHS(Lexer *lex, int exprPrec,
 }
 
 
+// if expr -> "if" expression "{" expression* "}" "else" "{" expression* "}"
+std::unique_ptr<IfExprAST> IfExpr(Lexer *lex) {
+    Token t;
+    GET_TOK // t is "if"
+    if (!(MATCH_TOK(TOK_IF, "if")))
+        ERROR("Expected 'if'")
+    auto cond = Expr(lex);
+    if (!cond)
+        return nullptr;
+    GET_TOK // t is "{"
+    if (!(MATCH_TOK(TOK_SYM, "{")))
+        ERROR("Expected '{'")
+    std::vector<std::unique_ptr<ExprAST>> ifBody;
+    std::vector<std::unique_ptr<ExprAST>> elseBody;
+    PEEK_TOK // t is "}" or expression
+    while (!(MATCH_TOK(TOK_SYM, "}"))) {
+        auto expr = Expr(lex);
+        if (!expr)
+            return nullptr;
+        ifBody.push_back(std::move(expr));
+        PEEK_TOK // t is "}" or expression
+    }
+    GET_TOK // t is "}"
+    if (!(MATCH_TOK(TOK_SYM, "}")))
+        ERROR("Expected '}'")
+    // we should be able to pick if there is an else statement
+    PEEK_TOK // t is "else" or something else
+    if (!(MATCH_TOK(TOK_ELSE, "else")))
+        return std::make_unique<IfExprAST>(
+            std::move(cond), std::move(ifBody), std::move(elseBody));
+    GET_TOK // t is "else"
+    GET_TOK // t is "{"
+    if (!(MATCH_TOK(TOK_SYM, "{")))
+        ERROR("Expected '{'")
+    PEEK_TOK // t is "}" or expression
+    while (!(MATCH_TOK(TOK_SYM, "}"))) {
+        auto expr = Expr(lex);
+        if (!expr)
+            return nullptr;
+        elseBody.push_back(std::move(expr));
+        PEEK_TOK // t is "}" or expression
+    }
+    GET_TOK // t is "}"
+    if (!(MATCH_TOK(TOK_SYM, "}")))
+        ERROR("Expected '}'")
+    return std::make_unique<IfExprAST>(
+        std::move(cond), std::move(ifBody), std::move(elseBody));
+}
+
+
 // prototype -> ID "(" ID* ")"
 std::unique_ptr<PrototypeAST> Prototype(Lexer *lex) {
     Token t;
@@ -185,7 +239,7 @@ std::unique_ptr<PrototypeAST> Prototype(Lexer *lex) {
 }
 
 
-// definition -> "fn" prototype "{" expression "}"
+// definition -> "fn" prototype "{" expression* "}"
 std::unique_ptr<FunctionAST> Definition(Lexer *lex) {
     Token t;
     GET_TOK // t is "fn"
@@ -197,13 +251,22 @@ std::unique_ptr<FunctionAST> Definition(Lexer *lex) {
     GET_TOK // t is "{"
     if (!(MATCH_TOK(TOK_SYM, "{")))
         ERROR("Expected '{' in definition")
-    auto e = Expr(lex);
-    if (!e)
+    // parse function body
+    auto exprs = std::vector<std::unique_ptr<ExprAST>>();
+    PEEK_TOK // t is "}" or something else
+    while (!(MATCH_TOK(TOK_SYM, "}"))) {
+        auto e = Expr(lex);
+        if (!e)
+            ERROR("Expected expression in definition")
+        exprs.push_back(std::move(e));
+        PEEK_TOK // t is "}" or something else
+    }
+    if (exprs.size() == 0)
         ERROR("Expected expression in definition")
     GET_TOK // t is "}"
     if (!(MATCH_TOK(TOK_SYM, "}")))
         ERROR("Expected '}' in definition")
-    return std::make_unique<FunctionAST>(std::move(proto), std::move(e));
+    return std::make_unique<FunctionAST>(std::move(proto), std::move(exprs));
 }
 
 
@@ -219,9 +282,11 @@ std::unique_ptr<PrototypeAST> Extern(Lexer *lex) {
 
 // toplevel expr -> expression
 std::unique_ptr<FunctionAST> TopLevelExpr(Lexer *lex) {
+    auto exprs = std::vector<std::unique_ptr<ExprAST>>();
     if (auto e = Expr(lex)) {
+        exprs.push_back(std::move(e));
         auto proto = std::make_unique<PrototypeAST>("", std::vector<std::string>());
-        return std::make_unique<FunctionAST>(std::move(proto), std::move(e));
+        return std::make_unique<FunctionAST>(std::move(proto), std::move(exprs));
     }
     return nullptr;
 }

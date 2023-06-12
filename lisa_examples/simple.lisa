@@ -6,8 +6,17 @@
 %%
 
 % function definition
-fn foo(a,b) {
-    (1 + 2 + a) * (a + (1 + 2))
+fn foo(a, b) {
+    a: a + b
+    b: a * b
+    if a > b {
+        (1 + 2 + a) * (a + (1 + 2))
+    }
+    else {
+        a + b
+        % there will be a bug if the next line starts with "("
+        a * (5 + 2)
+    }
 }
 
 % function declaration
