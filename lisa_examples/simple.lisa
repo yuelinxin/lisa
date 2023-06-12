@@ -11,8 +11,7 @@ fn foo(a, b) {
     b: a * b
     if a > b {
         (1 + 2 + a) * (a + (1 + 2))
-    }
-    else {
+    } else {
         a + b
         % there will be a bug if the next line starts with "("
         a * (5 + 2)

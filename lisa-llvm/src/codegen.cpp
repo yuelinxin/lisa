@@ -112,9 +112,11 @@ Value *CodeGenVisitor::visit(IfExprAST *node) {
         condV, ConstantFP::get(*context, APFloat(0.0)), "ifcond");
     Function *theFunction = builder.GetInsertBlock()->getParent();
     BasicBlock *ifBodyBB = BasicBlock::Create(*context, "ifbody", theFunction);
-    BasicBlock *elseBodyBB = BasicBlock::Create(*context, "elsebody");
     BasicBlock *mergeBB = BasicBlock::Create(*context, "ifcont");
-    builder.CreateCondBr(condV, ifBodyBB, elseBodyBB);
+    BasicBlock *elseBodyBB = nullptr;
+    if (node->els_body.size() > 0)
+        elseBodyBB = BasicBlock::Create(*context, "elsebody");
+    builder.CreateCondBr(condV, ifBodyBB, elseBodyBB ? elseBodyBB : mergeBB);
 
     // Generate code for the "if" body
     builder.SetInsertPoint(ifBodyBB);
@@ -125,22 +127,25 @@ Value *CodeGenVisitor::visit(IfExprAST *node) {
     ifBodyBB = builder.GetInsertBlock();
 
     // Generate code for the "else" body (if it exists)
-    theFunction->getBasicBlockList().push_back(elseBodyBB);
-    builder.SetInsertPoint(elseBodyBB);
     Value *elseBodyV = nullptr;
-    if (node->els_body.size() > 0)
+    if (elseBodyBB) {
+        theFunction->getBasicBlockList().push_back(elseBodyBB);
+        builder.SetInsertPoint(elseBodyBB);
         for (auto &expr : node->els_body)
             elseBodyV = expr->accept(*this);
-    builder.CreateBr(mergeBB);
-    elseBodyBB = builder.GetInsertBlock();
+        builder.CreateBr(mergeBB);
+        elseBodyBB = builder.GetInsertBlock();
+    }
 
     // Generate code for the merge block
     theFunction->getBasicBlockList().push_back(mergeBB);
     builder.SetInsertPoint(mergeBB);
     PHINode *phiNode = builder.CreatePHI(Type::getDoubleTy(*context), 2, "iftmp");
     phiNode->addIncoming(ifBodyV, ifBodyBB);
-    if (elseBodyV)
+    if (elseBodyBB)
         phiNode->addIncoming(elseBodyV, elseBodyBB);
+    else
+        phiNode->addIncoming(ConstantFP::get(*context, APFloat(0.0)), mergeBB);
 
     return phiNode;
 }
