@@ -230,7 +230,7 @@ void printTok(Token t) {
 
 
 int main() {
-    Lexer *lex = new Lexer("../examples/simple.lisa");
+    Lexer *lex = new Lexer("../examples/test_files/simple.lisa");
     Token t;
     do {
         t = lex->getTok(lex);

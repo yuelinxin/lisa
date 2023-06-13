@@ -282,7 +282,7 @@ int main() {
     InitializeNativeTarget();
     InitializeNativeTargetAsmPrinter();
     InitializeNativeTargetAsmParser();
-    auto *lex = new Lexer("../examples/simple.lisa");
+    auto *lex = new Lexer("../examples/test_files/simple.lisa");
     auto *codegen = new CodeGenVisitor();
     std::cout << "Lisa Compiler Ready >" << std::endl;
     mainLoop(lex, codegen);

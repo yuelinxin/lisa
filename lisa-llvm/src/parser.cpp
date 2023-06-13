@@ -304,7 +304,7 @@ std::unique_ptr<FunctionAST> TopLevelExpr(Lexer *lex) {
 
 #ifdef TEST_PARSER
 int main() {
-    Lexer *lex = new Lexer("simple.lisa");
+    Lexer *lex = new Lexer("../examples/test_files/simple.lisa");
     cout << "Lisa Compiler Ready >" << endl;
     mainLoop(lex);
     cout << "Parsing Complete." << endl;

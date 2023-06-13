@@ -71,6 +71,3 @@ test_num_2 *: 2
 test_num_3 /: 2
 
 out: "The area of the circle is " + area
-
-%%
-    Error: comment end with EOF
