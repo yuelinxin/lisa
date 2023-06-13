@@ -25,6 +25,7 @@ std::unique_ptr<ExprAST> Expr(Lexer *lex);
 std::unique_ptr<ExprAST> BinOpRHS(Lexer *lex, int exprPrec,
                                   std::unique_ptr<ExprAST> lhs);
 std::unique_ptr<IfExprAST> IfExpr(Lexer *lex);
+std::unique_ptr<ForExprAST> ForExpr(Lexer *lex);
 std::unique_ptr<PrototypeAST> Prototype(Lexer *lex);
 std::unique_ptr<FunctionAST> Definition(Lexer *lex);
 std::unique_ptr<FunctionAST> TopLevelExpr(Lexer *lex);

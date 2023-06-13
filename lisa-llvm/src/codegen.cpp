@@ -151,6 +151,12 @@ Value *CodeGenVisitor::visit(IfExprAST *node) {
 }
 
 
+// for ForExprAST
+Value *CodeGenVisitor::visit(ForExprAST *node) {
+    return nullptr;
+}
+
+
 // for CallExprAST
 Value *CodeGenVisitor::visit(CallExprAST *node) {
     Function *calleeF = module->getFunction(node->callee);
@@ -276,7 +282,7 @@ int main() {
     InitializeNativeTarget();
     InitializeNativeTargetAsmPrinter();
     InitializeNativeTargetAsmParser();
-    auto *lex = new Lexer("../lisa_examples/simple.lisa");
+    auto *lex = new Lexer("../examples/simple.lisa");
     auto *codegen = new CodeGenVisitor();
     std::cout << "Lisa Compiler Ready >" << std::endl;
     mainLoop(lex, codegen);

@@ -104,7 +104,7 @@ std::unique_ptr<ExprAST> IdentifierExpr(Lexer *lex) {
 }
 
 
-// primary -> number expr | paren expr | identifier expr
+// primary -> number expr | paren expr | identifier expr | if expr | for expr
 std::unique_ptr<ExprAST> Primary(Lexer *lex) {
     Token t;
     PEEK_TOK
@@ -116,6 +116,8 @@ std::unique_ptr<ExprAST> Primary(Lexer *lex) {
         return IdentifierExpr(lex);
     if (t.tp == TOK_IF)
         return IfExpr(lex);
+    if (t.tp == TOK_FOR)
+        return ForExpr(lex);
     if (t.tp == TOK_EOF)
         return nullptr;
     else
@@ -158,7 +160,9 @@ std::unique_ptr<ExprAST> BinOpRHS(Lexer *lex, int exprPrec,
 }
 
 
-// if expr -> "if" expression "{" expression* "}" "else" "{" expression* "}"
+// if expr -> "if" expression "{" expression* "}" 
+//            ("else if" expression "{" expression* "}")* 
+//            ("else" "{" expression* "}")?
 std::unique_ptr<IfExprAST> IfExpr(Lexer *lex) {
     Token t;
     GET_TOK // t is "if"
@@ -205,6 +209,12 @@ std::unique_ptr<IfExprAST> IfExpr(Lexer *lex) {
         ERROR("Expected '}'")
     return std::make_unique<IfExprAST>(
         std::move(cond), std::move(ifBody), std::move(elseBody));
+}
+
+
+// for expr -> "for"
+std::unique_ptr<ForExprAST> ForExpr(Lexer *lex) {
+    return nullptr;
 }
 
 

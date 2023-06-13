@@ -43,7 +43,7 @@ class NumberExprAST;
 class VariableExprAST;
 class BinaryExprAST;
 class IfExprAST;
-// class ForExprAST;
+class ForExprAST;
 class CallExprAST;
 class PrototypeAST;
 class FunctionAST;
@@ -65,7 +65,7 @@ public:
     virtual Value* visit(VariableExprAST *node);
     virtual Value* visit(BinaryExprAST *node);
     virtual Value* visit(IfExprAST *node);
-    // virtual Value* visit(ForExprAST *node);
+    virtual Value* visit(ForExprAST *node);
     virtual Value* visit(CallExprAST *node);
     virtual Function* visit(PrototypeAST *node);
     virtual Function* visit(FunctionAST *node);
@@ -132,6 +132,24 @@ public:
               std::vector<std::unique_ptr<ExprAST>> els_body) :
         cond(std::move(cond)), if_body(std::move(if_body)), 
         els_body(std::move(els_body)) {}
+    Value* accept(CodeGenVisitor &v) override {
+        return v.visit(this);
+    }
+};
+
+
+class ForExprAST : public ExprAST
+{
+public:
+    std::string var_name;
+    std::unique_ptr<ExprAST> start, end, step;
+    std::vector<std::unique_ptr<ExprAST>> body;
+public:
+    ForExprAST(std::string var_name, std::unique_ptr<ExprAST> start,
+               std::unique_ptr<ExprAST> end, std::unique_ptr<ExprAST> step,
+               std::vector<std::unique_ptr<ExprAST>> body) :
+        var_name(std::move(var_name)), start(std::move(start)),
+        end(std::move(end)), step(std::move(step)), body(std::move(body)) {}
     Value* accept(CodeGenVisitor &v) override {
         return v.visit(this);
     }
