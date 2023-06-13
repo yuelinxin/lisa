@@ -22,13 +22,15 @@ class Lexer
 public:
     explicit Lexer(const std::string& file);
     ~Lexer();
-    Token getTok(Lexer *lex);
-    Token peekTok(Lexer *lex);
+    Token getTok();
+    Token peekTok();
 private:
-    static int getChar(Lexer *lex);
-    static int peekChar(Lexer *lex);
-    static void skipLineComment(Lexer *lex);
-    static int skipBlockComment(Lexer *lex);
+    int getChar();
+    int peekChar();
+    void skipLineComment();
+    int skipBlockComment();
+    void matchKeywordToken(Token *t, const std::string& id);
+    void setToken(Token *t, TokenType tp, const std::string& lx);
     // lexer state
     std::ifstream file; // input file
     bool nl_buffer;     // newline buffer

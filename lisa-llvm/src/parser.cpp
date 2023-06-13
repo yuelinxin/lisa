@@ -28,7 +28,7 @@ void parseError(const char *str, const Token& t) {
 // getTok wrapper function
 // this wrapper function is here to add debug info
 Token GetTok(Lexer *lex) {
-    Token t = lex->getTok(lex);
+    Token t = lex->getTok();
     // cout << "token: " << t.lx << ", " 
     // << getTokenTypeString(t.tp) << endl;
     return t;
@@ -38,7 +38,7 @@ Token GetTok(Lexer *lex) {
 // peekTok wrapper function
 // this wrapper function is here to add debug info
 Token PeekTok(Lexer *lex) {
-    Token t = lex->peekTok(lex);
+    Token t = lex->peekTok();
     return t;
 }
 
@@ -212,7 +212,7 @@ std::unique_ptr<IfExprAST> IfExpr(Lexer *lex) {
 }
 
 
-// for expr -> "for"
+// for expr -> "for" identifier "in" 
 std::unique_ptr<ForExprAST> ForExpr(Lexer *lex) {
     return nullptr;
 }

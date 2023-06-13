@@ -18,6 +18,7 @@ using std::string;
 
 
 enum TokenType {
+    // special
     TOK_NEWLINE,
     TOK_EOF,
     TOK_ERR,
@@ -31,7 +32,11 @@ enum TokenType {
     TOK_EXTERN,
     TOK_IF,
     TOK_ELSE,
+    TOK_ELIF,
     TOK_FOR,
+    TOK_IN,
+    TOK_WHILE,
+    TOK_RETURN,
 };
 
 
@@ -42,15 +47,6 @@ struct Token {
     int ln;
     int col;
 };
-
-
-static int setToken(Token *t, TokenType tp, string lx, int ln, int col) {
-    t->tp = tp;
-    t->lx = lx;
-    t->ln = ln;
-    t->col = col;
-    return 0;
-}
 
 
 static bool isSingleSymbol(char c) {
@@ -184,7 +180,11 @@ static string getTokenTypeString(TokenType tp) {
         case TOK_EXTERN: return "TOK_EXTERN";
         case TOK_IF: return "TOK_IF";
         case TOK_ELSE: return "TOK_ELSE";
+        case TOK_ELIF: return "TOK_ELIF";
         case TOK_FOR: return "TOK_FOR";
+        case TOK_IN: return "TOK_IN";
+        case TOK_WHILE: return "TOK_WHILE";
+        case TOK_RETURN: return "TOK_RETURN";
         default: return "TOK_UNKNOWN";
     }
 }

@@ -32,49 +32,49 @@ Lexer::~Lexer() {
 
 // get one character from the file
 // wrapper function for std::ifstream.get()
-int Lexer::getChar(Lexer *lex) {
-    if (lex->nl_buffer) {
-        lex->ln++;
-        lex->col = 1;
-        lex->nl_buffer = false;
+int Lexer::getChar() {
+    if (this->nl_buffer) {
+        this->ln++;
+        this->col = 1;
+        this->nl_buffer = false;
     }
-    int c = lex->file.get();
+    int c = this->file.get();
     if (c == '\n') {
-        lex->nl_buffer = true;
+        this->nl_buffer = true;
     }
     else {
-        lex->col++;
+        this->col++;
     }
     return c;
 }
 
 
 // peek the next character from the file
-int Lexer::peekChar(Lexer *lex) {
-    int c = lex->file.peek();
+int Lexer::peekChar() {
+    int c = this->file.peek();
     return c;
 }
 
 
 // skip a single line comment
-void Lexer::skipLineComment(Lexer *lex) {
+void Lexer::skipLineComment() {
     // single line comment in lisa starts with %
     int c;
     do {
-        c = getChar(lex);
+        c = getChar();
     } while (c != EOF && c != '\n' && c != '\r');
 }
 
 
 // skip a multi-line comment
-int Lexer::skipBlockComment(Lexer *lex) {
+int Lexer::skipBlockComment() {
     // block comment in lisa starts with %%
     // and it ends with %%
     int c;
-    while((c = getChar(lex)) != EOF) {
+    while((c = getChar()) != EOF) {
         if (c == '%') {
-            if (peekChar(lex) == '%') {
-                getChar(lex);
+            if (peekChar() == '%') {
+                getChar();
                 break;
             }
         }
@@ -85,58 +85,76 @@ int Lexer::skipBlockComment(Lexer *lex) {
 }
 
 
+// set the token to the corresponding keyword
+void Lexer::matchKeywordToken(Token *t, const std::string& id) {
+    if (id == "fn")
+        setToken(t, TOK_FN, id);
+    else if (id == "extern")
+        setToken(t, TOK_EXTERN, id);
+    else if (id == "if")
+        setToken(t, TOK_IF, id);
+    else if (id == "else")
+        setToken(t, TOK_ELSE, id);
+    else if (id == "for")
+        setToken(t, TOK_FOR, id);
+    else if (id == "while")
+        setToken(t, TOK_WHILE, id);
+    else if (id == "return")
+        setToken(t, TOK_RETURN, id);
+    else
+        setToken(t, TOK_ID, id);
+}
+
+
+// setup the current token
+void Lexer::setToken(Token *t, TokenType tp, const std::string& lx) {
+    t->tp = tp;
+    t->lx = lx;
+    t->ln = this->ln;
+    t->col = this->col;
+}
+
+
 // get the next token from the file
-Token Lexer::getTok(Lexer *lex) {
+Token Lexer::getTok() {
     int c = ' ';
     std::string id;
     Token t;
 
     // Skip any whitespace.
     while (isspace(c))
-        c = getChar(lex);
+        c = getChar();
 
     // Skip comments
     if (c == '%') {
-        if (peekChar(lex) == '%') {
-            getChar(lex);
-            if (skipBlockComment(lex)) {
-                setToken(&t, TOK_ERR, "EOFinComment", 
-                    lex->ln, lex->col);
+        if (peekChar() == '%') {
+            getChar();
+            if (skipBlockComment()) {
+                setToken(&t, TOK_ERR, "EOFinComment");
                 return t;
             }
-            return getTok(lex);
+            return getTok();
         }
         else {
-            skipLineComment(lex);
-            return getTok(lex);
+            skipLineComment();
+            return getTok();
         }
     }
 
     // newline token
     // if (c == '\n') {
-    //     setToken(&t, TOK_NEWLINE, "\\n", lex->ln, lex->col);
+    //     setToken(&t, TOK_NEWLINE, "\\n");
     //     return t;
     // }
 
     // identifiers or keywords
     if (isalpha(c) || c == '_') { 
         id = c;
-        while (isalnum((c = peekChar(lex))) || c == '_') {
-            getChar(lex);
+        while (isalnum((c = peekChar())) || c == '_') {
+            getChar();
             id += c;
         }
-        if (id == "fn")
-            setToken(&t, TOK_FN, id, lex->ln, lex->col);
-        else if (id == "extern")
-            setToken(&t, TOK_EXTERN, id, lex->ln, lex->col);
-        else if (id == "if")
-            setToken(&t, TOK_IF, id, lex->ln, lex->col);
-        else if (id == "else")
-            setToken(&t, TOK_ELSE, id, lex->ln, lex->col);
-        else if (id == "for")
-            setToken(&t, TOK_FOR, id, lex->ln, lex->col);
-        else
-            setToken(&t, TOK_ID, id, lex->ln, lex->col);
+        matchKeywordToken(&t, id);
     }
 
     // numbers (int / float / double)
@@ -144,61 +162,61 @@ Token Lexer::getTok(Lexer *lex) {
         string NumStr;
         NumStr += c;
         int count_dot = 0;
-        while (isdigit(c = peekChar(lex)) || c == '.') {
-            getChar(lex);
+        while (isdigit(c = peekChar()) || c == '.') {
+            getChar();
             NumStr += c;
             if (c == '.')
                 count_dot++;
         }
         if (count_dot > 1)
-            setToken(&t, TOK_ERR, NumStr, lex->ln, lex->col);
+            setToken(&t, TOK_ERR, NumStr);
         else
-            setToken(&t, TOK_NUM, NumStr, lex->ln, lex->col);
+            setToken(&t, TOK_NUM, NumStr);
     }
 
     // string literals
     else if (c == '"') {
         string str;
-        while ((c = getChar(lex)) != EOF && c != '"')
+        while ((c = getChar()) != EOF && c != '"')
             str += c;
         if (c == EOF)
-            setToken(&t, TOK_ERR, "", lex->ln, lex->col);
+            setToken(&t, TOK_ERR, "");
         else
-            setToken(&t, TOK_STR, str, lex->ln, lex->col);
+            setToken(&t, TOK_STR, str);
     }
 
     // symbols
     else if (isSingleSymbol(c)) {
         id = c;
-        if (isDoubleSymbol(c, peekChar(lex))) {
-            id += getChar(lex);
-            setToken(&t, TOK_SYM, id, lex->ln, lex->col);
+        if (isDoubleSymbol(c, peekChar())) {
+            id += getChar();
+            setToken(&t, TOK_SYM, id);
         }
         else
-            setToken(&t, TOK_SYM, id, lex->ln, lex->col);
+            setToken(&t, TOK_SYM, id);
     }
 
     // end of file
     else if (c == EOF)
-        setToken(&t, TOK_EOF, "EOF", lex->ln, lex->col);
+        setToken(&t, TOK_EOF, "EOF");
 
     // unknown or illegal character
     else
-        setToken(&t, TOK_ERR, "ILL", lex->ln, lex->col);
+        setToken(&t, TOK_ERR, "ILL");
 
     return t;
 }
 
 
 // peek the next token without consuming it
-Token Lexer::peekTok(Lexer *lex) {
-    std::streampos pos = lex->file.tellg();
-    int temp_ln = lex->ln;
-    int temp_col = lex->col;
-    Token t = getTok(lex);
-    lex->file.seekg(pos);
-    lex->ln = temp_ln;
-    lex->col = temp_col;
+Token Lexer::peekTok() {
+    std::streampos pos = this->file.tellg();
+    int temp_ln = this->ln;
+    int temp_col = this->col;
+    Token t = getTok();
+    this->file.seekg(pos);
+    this->ln = temp_ln;
+    this->col = temp_col;
     return t;
 }
 

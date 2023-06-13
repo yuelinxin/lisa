@@ -224,7 +224,7 @@ static void handleDefinition(Lexer *lex, CodeGenVisitor *codegen) {
             fnIR->print(errs());
         }
     } else {
-        lex->getTok(lex);
+        lex->getTok();
     }
 }
 
@@ -237,7 +237,7 @@ static void handleExtern(Lexer *lex, CodeGenVisitor *codegen) {
             fnIR->print(errs());
         }
     } else {
-        lex->getTok(lex);
+        lex->getTok();
     }
 }
 
@@ -250,7 +250,7 @@ static void handleTopLevelExpr(Lexer *lex, CodeGenVisitor *codegen) {
             fnIR->print(errs());
         }
     } else {
-        lex->getTok(lex);
+        lex->getTok();
     }
 }
 
@@ -258,7 +258,7 @@ static void handleTopLevelExpr(Lexer *lex, CodeGenVisitor *codegen) {
 // main loop
 static void mainLoop(Lexer *lex, CodeGenVisitor *codegen) {
     while (true) {
-        Token t = lex->peekTok(lex);
+        Token t = lex->peekTok();
         switch (t.tp) {
             case TOK_EOF:
                 return;

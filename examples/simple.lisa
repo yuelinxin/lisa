@@ -1,42 +1,15 @@
-% a test comment
-
-%%
-    a block comment
-    with multiple lines
-%%
+% function declaration
+extern bar(a)
 
 % function definition
 fn foo(a, b) {
     a: a + b
-    b: a * b
-    if a > b {
+    b: a * b + bar(b)
+    if a = b {
         (1 + 2 + a) * (a + (1 + 2))
     } else {
         a + b
-        % there will be a bug if the next line starts with "("
         a * (5 + 2)
     }
+    % return a / b
 }
-
-% function declaration
-% extern bar(a)
-
-% fn foobar() {
-%     foo(1, 2) + bar(1)
-% }
-
-% function calls
-% foo(1, 2)
-% bar(1)
-
-% binary operations
-% 3 + (4 * 5)
-% 1 / 2
-% 3 = 3
-% 2 > 3
-
-% variable assignment
-% a: 1
-% b: 3.14
-% c: 2 * 5 ^ 4
-% d: 2 * (5 ^ 4)
