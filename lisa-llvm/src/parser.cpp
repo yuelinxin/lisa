@@ -212,9 +212,57 @@ std::unique_ptr<IfExprAST> IfExpr(Lexer *lex) {
 }
 
 
-// for expr -> "for" identifier "in" 
+// for expr -> "for" ID "in" (expression | range) "{" expression* "}"
 std::unique_ptr<ForExprAST> ForExpr(Lexer *lex) {
-    return nullptr;
+    Token t;
+    GET_TOK // t is "for"
+    if (!(MATCH_TOK(TOK_FOR, "for")))
+        ERROR("Expected 'for'")
+    GET_TOK // t is ID
+    if (t.tp != TOK_ID)
+        ERROR("Expected identifier in for loop")
+    std::string idName = t.lx;
+    GET_TOK // t is "in"
+    if (!(MATCH_TOK(TOK_IN, "in")))
+        ERROR("Expected 'in'")
+    PEEK_TOK // t is expression or range
+    // range
+    // range -> NUM "~" NUM ("~" NUM)?
+    std::unique_ptr<ExprAST> start, end, step;
+    if (t.tp == TOK_NUM) {
+        start = NumberExpr(lex);
+        GET_TOK // t is "~"
+        if (!(MATCH_TOK(TOK_SYM, "~")))
+            ERROR("Expected '~'")
+        PEEK_TOK // t is NUM
+        if (t.tp != TOK_NUM)
+            ERROR("Expected higher bound of range")
+        end = NumberExpr(lex);
+        PEEK_TOK // t is "~" or "{"
+        if (MATCH_TOK(TOK_SYM, "~")) {
+            GET_TOK // t is "~"
+            step = NumberExpr(lex);
+        }
+    }
+    // expression
+    else {}
+    GET_TOK // t is "{"
+    if (!(MATCH_TOK(TOK_SYM, "{")))
+        ERROR("Expected '{'")
+    std::vector<std::unique_ptr<ExprAST>> body;
+    PEEK_TOK // t is "}" or expression
+    while (!(MATCH_TOK(TOK_SYM, "}"))) {
+        auto expr = Expr(lex);
+        if (!expr)
+            return nullptr;
+        body.push_back(std::move(expr));
+        PEEK_TOK // t is "}" or expression
+    }
+    GET_TOK // t is "}"
+    if (!(MATCH_TOK(TOK_SYM, "}")))
+        ERROR("Expected '}'")
+    return std::make_unique<ForExprAST>(idName, std::move(start), 
+        std::move(end), std::move(step), std::move(body));
 }
 
 

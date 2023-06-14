@@ -153,7 +153,51 @@ Value *CodeGenVisitor::visit(IfExprAST *node) {
 
 // for ForExprAST
 Value *CodeGenVisitor::visit(ForExprAST *node) {
-    return nullptr;
+    Value *startV = node->start->accept(*this);
+    if (!startV)
+        return nullptr;
+    Function *theFunction = builder.GetInsertBlock()->getParent();
+    BasicBlock *preheaderBB = builder.GetInsertBlock();
+    BasicBlock *loopBB = BasicBlock::Create(*context, "loop", theFunction);
+    builder.CreateBr(loopBB);
+
+    // Start insertion in loopBB
+    builder.SetInsertPoint(loopBB);
+    PHINode *variable = builder.CreatePHI(Type::getDoubleTy(*context), 2, 
+                                          node->var_name.c_str());
+    variable->addIncoming(startV, preheaderBB);
+    Value *oldVal = namedValues[node->var_name];
+    namedValues[node->var_name] = variable;
+    for (auto &expr : node->body)
+        expr->accept(*this);
+    
+    Value *setV = nullptr;
+    if (node->step) {
+        setV = node->step->accept(*this);
+        if (!setV)
+            return nullptr;
+    } else {
+        setV = ConstantFP::get(*context, APFloat(1.0));
+    }
+    Value *nextVar = builder.CreateFAdd(variable, setV, "nextvar");
+
+    Value *endCond = node->end->accept(*this);
+    if (!endCond)
+        return nullptr;
+    endCond = builder.CreateFCmpONE(
+        endCond, ConstantFP::get(*context, APFloat(0.0)), "loopcond");
+    BasicBlock *loopEndBB = builder.GetInsertBlock();
+    BasicBlock *afterBB = BasicBlock::Create(*context, "afterloop", theFunction);
+    builder.CreateCondBr(endCond, loopBB, afterBB);
+
+    // Start insertion in afterBB
+    builder.SetInsertPoint(afterBB);
+    variable->addIncoming(nextVar, loopEndBB);
+    if (oldVal)
+        namedValues[node->var_name] = oldVal;
+    else
+        namedValues.erase(node->var_name);
+    return Constant::getNullValue(Type::getDoubleTy(*context));
 }
 
 
@@ -199,7 +243,7 @@ Function *CodeGenVisitor::visit(FunctionAST *node) {
         }
     }
     verifyFunction(*theFunction);
-    fpm->run(*theFunction); // function pass optimize
+    fpm->run(*theFunction); // function pass optimization
     return theFunction;
 }
 

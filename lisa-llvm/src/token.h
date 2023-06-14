@@ -71,7 +71,7 @@ static bool isSingleSymbol(char c) {
         case '!': // not
         case '&': // logical and
         case '|': // logical or
-        case '~': // logical xor
+        case '~': // range separator
         case ';':
             return true;
         default:
@@ -150,7 +150,6 @@ static std::map<char, int> binopPrecedence = {
     {'!', 15}, // logical not
     {'&', 15}, // logical and
     {'|', 15}, // logical or
-    {'~', 15}, // logical xor
     {'+', 20}, // binary add
     {'-', 20}, // binary subtract
     {'*', 40}, // multiply

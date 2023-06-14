@@ -97,6 +97,8 @@ void Lexer::matchKeywordToken(Token *t, const std::string& id) {
         setToken(t, TOK_ELSE, id);
     else if (id == "for")
         setToken(t, TOK_FOR, id);
+    else if (id == "in")
+        setToken(t, TOK_IN, id);
     else if (id == "while")
         setToken(t, TOK_WHILE, id);
     else if (id == "return")

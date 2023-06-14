@@ -11,5 +11,10 @@ fn foo(a, b) {
         a + b
         a * (5 + 2)
     }
-    % return a / b
+    for i in 0 ~ 10 {
+        b: a + i
+        for j in 0 ~ 10 {
+            a: a + j
+        }
+    }
 }
