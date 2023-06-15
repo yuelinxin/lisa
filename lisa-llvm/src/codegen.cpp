@@ -218,6 +218,16 @@ Value *CodeGenVisitor::visit(ForExprAST *node) {
 }
 
 
+// for ReturnExprAST
+Value *CodeGenVisitor::visit(ReturnExprAST *node) {
+    Value *retVal = node->expr->accept(*this);
+    if (!retVal)
+        return nullptr;
+    builder.CreateRet(retVal);
+    return retVal;
+}
+
+
 // for CallExprAST
 Value *CodeGenVisitor::visit(CallExprAST *node) {
     Function *calleeF = module->getFunction(node->callee);
@@ -255,8 +265,22 @@ Function *CodeGenVisitor::visit(FunctionAST *node) {
     // code gen for function body
     for (auto &expr : node->body) {
         // if the expr is the last one, generate as return value
-        if (expr == node->body.back())
-            builder.CreateRet(expr->accept(*this));
+        if (expr == node->body.back()) {
+            if (ReturnExprAST *ret = dynamic_cast<ReturnExprAST *>(expr.get())) {
+                if (!expr->accept(*this)) {
+                    theFunction->eraseFromParent();
+                    return nullptr;
+                }
+            }
+            else {
+                Value *retVal = expr->accept(*this);
+                if (!retVal) {
+                    theFunction->eraseFromParent();
+                    return nullptr;
+                }
+                builder.CreateRet(retVal);
+            }
+        }
         else if (!expr->accept(*this)) {
             theFunction->eraseFromParent();
             return nullptr;

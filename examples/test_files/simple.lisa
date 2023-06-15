@@ -24,6 +24,7 @@ fn area_of_circle(radius) {
     if radius > 0 {
         area: 3.14 * radius * radius
     }
+    return area
 }
 
 output: area_of_circle(10)

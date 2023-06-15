@@ -118,6 +118,8 @@ std::unique_ptr<ExprAST> Primary(Lexer *lex) {
         return IfExpr(lex);
     if (t.tp == TOK_FOR)
         return ForExpr(lex);
+    if (t.tp == TOK_RETURN)
+        return ReturnExpr(lex);
     if (t.tp == TOK_EOF)
         return nullptr;
     else
@@ -270,6 +272,19 @@ std::unique_ptr<ForExprAST> ForExpr(Lexer *lex) {
         ERROR("Expected '}'")
     return std::make_unique<ForExprAST>(idName, std::move(start), 
         std::move(end), std::move(step), std::move(body));
+}
+
+
+// return expr -> "return" expression
+std::unique_ptr<ReturnExprAST> ReturnExpr(Lexer *lex) {
+    Token t;
+    GET_TOK // t is "return"
+    if (!(MATCH_TOK(TOK_RETURN, "return")))
+        ERROR("Expected 'return'")
+    auto expr = Expr(lex);
+    if (!expr)
+        return nullptr;
+    return std::make_unique<ReturnExprAST>(std::move(expr));
 }
 
 
