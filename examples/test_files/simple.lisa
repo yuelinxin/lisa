@@ -26,5 +26,3 @@ fn area_of_circle(radius) {
     }
     return area
 }
-
-output: area_of_circle(10)

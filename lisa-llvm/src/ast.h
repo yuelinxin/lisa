@@ -29,6 +29,10 @@
 #include "llvm/IR/Verifier.h"
 #include "llvm/IR/LegacyPassManager.h"
 #include "llvm/Support/TargetSelect.h"
+#include "llvm/Support/raw_ostream.h"
+#include "llvm/Support/FileSystem.h"
+#include "llvm/Support/Host.h"
+#include "llvm/MC/TargetRegistry.h"
 #include "llvm/Target/TargetMachine.h"
 #include "llvm/Transforms/InstCombine/InstCombine.h"
 #include "llvm/Transforms/Scalar.h"
@@ -62,6 +66,9 @@ private:
 public:
     CodeGenVisitor();
     virtual ~CodeGenVisitor() = default;
+    std::unique_ptr<Module> getModule() {
+        return std::move(module);
+    }
     AllocaInst* createEntryBlockAlloca(Function *theFunction, 
                                        const std::string &varName);
     virtual Value* visit(NumberExprAST *node);

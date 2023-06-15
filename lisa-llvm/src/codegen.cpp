@@ -370,12 +370,51 @@ int main() {
     InitializeNativeTarget();
     InitializeNativeTargetAsmPrinter();
     InitializeNativeTargetAsmParser();
-    auto *lex = new Lexer("../examples/test_files/simple.lisa");
-    auto *codegen = new CodeGenVisitor();
+    auto lex = std::make_unique<Lexer>("../examples/test_files/simple.lisa");
+    auto codegen = std::make_unique<CodeGenVisitor>();
     std::cout << "Lisa Compiler Ready >" << std::endl;
-    mainLoop(lex, codegen);
-    delete codegen;
-    delete lex;
+    mainLoop(lex.get(), codegen.get());
+
+    // InitializeAllTargetInfos();
+    // InitializeAllTargets();
+    // InitializeAllTargetMCs();
+    // InitializeAllAsmParsers();
+    // InitializeAllAsmPrinters();
+    InitializeNativeTarget();
+    InitializeNativeTargetAsmPrinter();
+    InitializeNativeTargetAsmParser();
+    std::string error;
+    auto targetTriple = llvm::sys::getDefaultTargetTriple();
+    auto target = TargetRegistry::lookupTarget(targetTriple, error);
+    if (!target) {
+        errs() << error;
+        return 1;
+    }
+    auto CPU = "generic";
+    auto features = "";
+    TargetOptions opt;
+    auto RM = Optional<Reloc::Model>();
+    auto targetMachine = target->createTargetMachine(
+        targetTriple, CPU, features, opt, RM);
+    auto module = codegen->getModule();
+    module->setDataLayout(targetMachine->createDataLayout());
+    module->setTargetTriple(targetTriple);
+    auto filename = "output.o";
+    std::error_code EC;
+    raw_fd_ostream dest(filename, EC, sys::fs::OF_None);
+    if (EC) {
+        errs() << "Could not open file: " << EC.message();
+        return 1;
+    }
+    legacy::PassManager pass;
+    auto fileType = CGFT_ObjectFile;
+    if (targetMachine->addPassesToEmitFile(pass, dest, nullptr, fileType)) {
+        errs() << "TargetMachine can't emit a file of this type";
+        return 1;
+    }
+    pass.run(*module);
+    dest.flush();
+
     return 0;
 }
 #endif
