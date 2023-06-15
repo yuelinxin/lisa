@@ -24,6 +24,7 @@ public:
     ~Lexer();
     Token getTok();
     Token peekTok();
+    Token peekNTok(int n);
 private:
     int getChar();
     int peekChar();

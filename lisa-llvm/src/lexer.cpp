@@ -223,6 +223,21 @@ Token Lexer::peekTok() {
 }
 
 
+// peek the nth token without consuming it
+Token Lexer::peekNTok(int n) {
+    std::streampos pos = this->file.tellg();
+    int temp_ln = this->ln;
+    int temp_col = this->col;
+    Token t;
+    for (int i = 0; i < n; i++)
+        t = getTok();
+    this->file.seekg(pos);
+    this->ln = temp_ln;
+    this->col = temp_col;
+    return t;
+}
+
+
 // #define TEST_LEXER
 #ifdef TEST_LEXER
 void printTok(Token t) {

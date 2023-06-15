@@ -29,6 +29,7 @@ CodeGenVisitor::CodeGenVisitor() :
     // jit(std::make_unique<lisa::LisaJIT>()) 
     {
         // add all the passes
+        // fpm->add(createPromoteMemoryToRegisterPass());
         fpm->add(createInstructionCombiningPass());
         fpm->add(createReassociatePass());
         fpm->add(createGVNPass());
@@ -36,6 +37,14 @@ CodeGenVisitor::CodeGenVisitor() :
         fpm->doInitialization();
         // module->setDataLayout(jit->getDataLayout());
     }
+
+
+AllocaInst *CodeGenVisitor::createEntryBlockAlloca(Function *theFunction,
+                                          const std::string &varName) {
+    IRBuilder<> tmpB(&theFunction->getEntryBlock(),
+                     theFunction->getEntryBlock().begin());
+    return tmpB.CreateAlloca(Type::getDoubleTy(*context), nullptr, varName);
+}
 
 
 // for NumberExprAST
@@ -46,39 +55,44 @@ Value *CodeGenVisitor::visit(NumberExprAST *node) {
 
 // for VariableExprAST
 Value *CodeGenVisitor::visit(VariableExprAST *node) {
-    Value *v = namedValues[node->name];
+    // Value *v = namedValues[node->name];
+    AllocaInst *v = namedValues[node->name];
     if (!v) {
         string err = "Undefined identifier: " + node->name;
         return codeGenError(err.c_str());
     }
-    return v;
+    return builder.CreateLoad(v->getAllocatedType(), v, node->name.c_str());
 }
 
 
 // for BinaryExprAST
 Value *CodeGenVisitor::visit(BinaryExprAST *node) {
+    // assignment
+    if (node->op == ':') {
+        VariableExprAST *lhs = dynamic_cast<VariableExprAST*>(node->lhs.get());
+        if (!lhs)
+            return codeGenError("invalid assignment target");
+        Value *rhsVal = node->rhs->accept(*this);
+        if (!rhsVal)
+            return nullptr;
+        Value *lhsVal = namedValues[lhs->name];
+        if (!lhsVal) {
+            Function *theFunction = builder.GetInsertBlock()->getParent();
+            AllocaInst *alloca = createEntryBlockAlloca(theFunction, lhs->name);
+            builder.CreateStore(rhsVal, alloca);
+            namedValues[lhs->name] = alloca;
+            return rhsVal;
+        }
+        builder.CreateStore(rhsVal, lhsVal);
+        return rhsVal;
+    }
+
+    // other binary operations
     Value *lhs = node->lhs->accept(*this);
     Value *rhs = node->rhs->accept(*this);
     if (!lhs || !rhs)
         return nullptr;
     switch (node->op) {
-        case ':':
-            // variable assignment, create new variable if not exists
-            if (VariableExprAST *lhsVar = dynamic_cast<VariableExprAST *>(node->lhs.get())) {
-                Value *varValue = namedValues[lhsVar->name];
-                // if (!varValue) {
-                //     // create new variable
-                //     AllocaInst *alloca = builder.CreateAlloca(Type::getDoubleTy(*context), nullptr, lhsVar->name.c_str());
-                //     varValue = alloca;
-                //     // store the variable in the namedValues map
-                //     namedValues[lhsVar->name] = varValue;
-                // }
-                builder.CreateStore(rhs, varValue);
-                return rhs;
-            } else {
-                codeGenError("Invalid left-hand side of assignment");
-                return nullptr;
-            }
         case '+':
             return builder.CreateFAdd(lhs, rhs, "addtmp");
         case '-':
@@ -153,46 +167,49 @@ Value *CodeGenVisitor::visit(IfExprAST *node) {
 
 // for ForExprAST
 Value *CodeGenVisitor::visit(ForExprAST *node) {
-    Value *startV = node->start->accept(*this);
-    if (!startV)
-        return nullptr;
     Function *theFunction = builder.GetInsertBlock()->getParent();
-    BasicBlock *preheaderBB = builder.GetInsertBlock();
+    AllocaInst *alloca = createEntryBlockAlloca(theFunction, node->var_name);
+    Value *startVal = node->start->accept(*this);
+    if (!startVal)
+        return nullptr;
+    builder.CreateStore(startVal, alloca);
+
     BasicBlock *loopBB = BasicBlock::Create(*context, "loop", theFunction);
     builder.CreateBr(loopBB);
-
-    // Start insertion in loopBB
     builder.SetInsertPoint(loopBB);
-    PHINode *variable = builder.CreatePHI(Type::getDoubleTy(*context), 2, 
-                                          node->var_name.c_str());
-    variable->addIncoming(startV, preheaderBB);
-    Value *oldVal = namedValues[node->var_name];
-    namedValues[node->var_name] = variable;
-    for (auto &expr : node->body)
-        expr->accept(*this);
-    
-    Value *setV = nullptr;
+    AllocaInst *oldVal = namedValues[node->var_name];
+    namedValues[node->var_name] = alloca;
+    for (auto &expr : node->body) {
+        Value *bodyV = expr->accept(*this);
+        if (!bodyV) {
+            namedValues[node->var_name] = oldVal;
+            return nullptr;
+        }
+    }
+
+    Value *stepVal = nullptr;
     if (node->step) {
-        setV = node->step->accept(*this);
-        if (!setV)
+        stepVal = node->step->accept(*this);
+        if (!stepVal)
             return nullptr;
     } else {
-        setV = ConstantFP::get(*context, APFloat(1.0));
+        stepVal = ConstantFP::get(*context, APFloat(1.0));
     }
-    Value *nextVar = builder.CreateFAdd(variable, setV, "nextvar");
 
     Value *endCond = node->end->accept(*this);
     if (!endCond)
         return nullptr;
+    Value *curVar = builder.CreateLoad(alloca->getAllocatedType(), 
+                                       alloca, node->var_name.c_str());
+    Value *nextVar = builder.CreateFAdd(curVar, stepVal, "nextvar");
+    builder.CreateStore(nextVar, alloca);
     endCond = builder.CreateFCmpONE(
         endCond, ConstantFP::get(*context, APFloat(0.0)), "loopcond");
-    BasicBlock *loopEndBB = builder.GetInsertBlock();
+    
     BasicBlock *afterBB = BasicBlock::Create(*context, "afterloop", theFunction);
     builder.CreateCondBr(endCond, loopBB, afterBB);
-
-    // Start insertion in afterBB
     builder.SetInsertPoint(afterBB);
-    variable->addIncoming(nextVar, loopEndBB);
+
     if (oldVal)
         namedValues[node->var_name] = oldVal;
     else
@@ -230,8 +247,11 @@ Function *CodeGenVisitor::visit(FunctionAST *node) {
     BasicBlock *bb = BasicBlock::Create(*context, "entry", theFunction);
     builder.SetInsertPoint(bb);
     namedValues.clear();
-    for (auto &arg : theFunction->args())
-        namedValues[string(arg.getName())] = &arg;
+    for (auto &arg : theFunction->args()) {
+        AllocaInst *alloca = createEntryBlockAlloca(theFunction, string(arg.getName()));
+        builder.CreateStore(&arg, alloca);
+        namedValues[string(arg.getName())] = alloca;
+    }
     // code gen for function body
     for (auto &expr : node->body) {
         // if the expr is the last one, generate as return value

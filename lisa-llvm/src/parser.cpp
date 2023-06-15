@@ -225,23 +225,30 @@ std::unique_ptr<ForExprAST> ForExpr(Lexer *lex) {
     GET_TOK // t is "in"
     if (!(MATCH_TOK(TOK_IN, "in")))
         ERROR("Expected 'in'")
-    PEEK_TOK // t is expression or range
+    PEEK_TOK // t is expression or number
     // range
-    // range -> NUM "~" NUM ("~" NUM)?
+    // range -> high | low "~" high | low "~" high "~" step
     std::unique_ptr<ExprAST> start, end, step;
     if (t.tp == TOK_NUM) {
-        start = NumberExpr(lex);
-        GET_TOK // t is "~"
-        if (!(MATCH_TOK(TOK_SYM, "~")))
-            ERROR("Expected '~'")
-        PEEK_TOK // t is NUM
-        if (t.tp != TOK_NUM)
-            ERROR("Expected higher bound of range")
-        end = NumberExpr(lex);
-        PEEK_TOK // t is "~" or "{"
-        if (MATCH_TOK(TOK_SYM, "~")) {
+        t = lex->peekNTok(2);
+        if (MATCH_TOK(TOK_SYM, "{")) {
+            start = std::make_unique<NumberExprAST>("0");
+            end = NumberExpr(lex);
+        }
+        else {
+            start = NumberExpr(lex);
             GET_TOK // t is "~"
-            step = NumberExpr(lex);
+            if (!(MATCH_TOK(TOK_SYM, "~")))
+                ERROR("Expected '~'")
+            PEEK_TOK // t is NUM
+            if (t.tp != TOK_NUM)
+                ERROR("Expected higher bound of range")
+            end = NumberExpr(lex);
+            PEEK_TOK // t is "~" or "{"
+            if (MATCH_TOK(TOK_SYM, "~")) {
+                GET_TOK // t is "~"
+                step = NumberExpr(lex);
+            }
         }
     }
     // expression

@@ -44,6 +44,7 @@ class VariableExprAST;
 class BinaryExprAST;
 class IfExprAST;
 class ForExprAST;
+class ReturnExprAST;
 class CallExprAST;
 class PrototypeAST;
 class FunctionAST;
@@ -57,15 +58,18 @@ private:
     std::unique_ptr<Module> module;
     std::unique_ptr<legacy::FunctionPassManager> fpm;
     std::unique_ptr<lisa::LisaJIT> jit;
-    std::map<std::string, Value*> namedValues;
+    std::map<std::string, AllocaInst*> namedValues;
 public:
     CodeGenVisitor();
     virtual ~CodeGenVisitor() = default;
+    AllocaInst* createEntryBlockAlloca(Function *theFunction, 
+                                       const std::string &varName);
     virtual Value* visit(NumberExprAST *node);
     virtual Value* visit(VariableExprAST *node);
     virtual Value* visit(BinaryExprAST *node);
     virtual Value* visit(IfExprAST *node);
     virtual Value* visit(ForExprAST *node);
+    virtual Value* visit(ReturnExprAST *node);
     virtual Value* visit(CallExprAST *node);
     virtual Function* visit(PrototypeAST *node);
     virtual Function* visit(FunctionAST *node);
@@ -150,6 +154,19 @@ public:
                std::vector<std::unique_ptr<ExprAST>> body) :
         var_name(std::move(var_name)), start(std::move(start)),
         end(std::move(end)), step(std::move(step)), body(std::move(body)) {}
+    Value* accept(CodeGenVisitor &v) override {
+        return v.visit(this);
+    }
+};
+
+
+class ReturnExprAST : public ExprAST
+{
+public:
+    std::unique_ptr<ExprAST> expr;
+public:
+    explicit ReturnExprAST(std::unique_ptr<ExprAST> expr) :
+        expr(std::move(expr)) {}
     Value* accept(CodeGenVisitor &v) override {
         return v.visit(this);
     }
