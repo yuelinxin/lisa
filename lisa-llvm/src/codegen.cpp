@@ -203,9 +203,8 @@ Value *CodeGenVisitor::visit(ForExprAST *node) {
                                        alloca, node->var_name.c_str());
     Value *nextVar = builder.CreateFAdd(curVar, stepVal, "nextvar");
     builder.CreateStore(nextVar, alloca);
-    endCond = builder.CreateFCmpONE(
-        endCond, ConstantFP::get(*context, APFloat(0.0)), "loopcond");
-    
+    endCond = builder.CreateFCmpONE(endCond, nextVar, "loopcond");
+
     BasicBlock *afterBB = BasicBlock::Create(*context, "afterloop", theFunction);
     builder.CreateCondBr(endCond, loopBB, afterBB);
     builder.SetInsertPoint(afterBB);

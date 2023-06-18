@@ -1,5 +1,5 @@
 % function declaration
-extern bar(a)
+% extern bar(a)
 
 % function definition
 % fn foo(a, b) {
@@ -25,4 +25,16 @@ fn area_of_circle(radius) {
         area: 3.14 * radius * radius
     }
     return area
+}
+
+fn loop_test() {
+    a: 0
+    b: 0
+    for i in 10 {
+        a: a + i
+        for j in 5 {
+            b: a + j
+        }
+    }
+    return b
 }

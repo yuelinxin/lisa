@@ -53,15 +53,15 @@ static bool isSingleSymbol(char c) {
     switch (c) {
         case '(': // parameter list start
         case ')': // parameter list end
-        case '[': // list index start
-        case ']': // list index end
+        case '[': // list start
+        case ']': // list end
         case '{': // code block start
         case '}': // code block end
         case '.': // namespace
         case ',': // comma
         case ':': // assignment
-        case '+': // binary add
-        case '-': // binary subtract
+        case '+': // add
+        case '-': // subtract
         case '*': // multiply
         case '/': // divide
         case '^': // exponent
