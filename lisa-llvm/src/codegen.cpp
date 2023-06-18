@@ -7,8 +7,6 @@
  * 
  */
 
-#include "lexer.h"
-#include "parser.h"
 #include "ast.h"
 using namespace llvm;
 
@@ -58,7 +56,7 @@ Value *CodeGenVisitor::visit(VariableExprAST *node) {
     // Value *v = namedValues[node->name];
     AllocaInst *v = namedValues[node->name];
     if (!v) {
-        string err = "Undefined identifier: " + node->name;
+        std::string err = "Undefined identifier: " + node->name;
         return codeGenError(err.c_str());
     }
     return builder.CreateLoad(v->getAllocatedType(), v, node->name.c_str());
@@ -231,7 +229,7 @@ Value *CodeGenVisitor::visit(ReturnExprAST *node) {
 Value *CodeGenVisitor::visit(CallExprAST *node) {
     Function *calleeF = module->getFunction(node->callee);
     if (!calleeF) {
-        string err = "Unknown function referenced: " + node->callee;
+        std::string err = "Unknown function referenced: " + node->callee;
         return codeGenError(err.c_str());
     }
     if (calleeF->arg_size() != node->args.size())
@@ -257,9 +255,10 @@ Function *CodeGenVisitor::visit(FunctionAST *node) {
     builder.SetInsertPoint(bb);
     namedValues.clear();
     for (auto &arg : theFunction->args()) {
-        AllocaInst *alloca = createEntryBlockAlloca(theFunction, string(arg.getName()));
+        AllocaInst *alloca = createEntryBlockAlloca(
+            theFunction, std::string(arg.getName()));
         builder.CreateStore(&arg, alloca);
-        namedValues[string(arg.getName())] = alloca;
+        namedValues[std::string(arg.getName())] = alloca;
     }
     // code gen for function body
     for (auto &expr : node->body) {
@@ -303,67 +302,7 @@ Function *CodeGenVisitor::visit(PrototypeAST *node) {
 }
 
 
-// handle definition
-static void handleDefinition(Lexer *lex, CodeGenVisitor *codegen) {
-    if (auto fnAST = Definition(lex)) {
-        if (auto *fnIR = fnAST->accept(*codegen)) {
-            fprintf(stderr, "\033[1;34m->\033[0m Read function definition:\n");
-            fnIR->print(errs());
-        }
-    } else {
-        lex->getTok();
-    }
-}
-
-
-// handle extern
-static void handleExtern(Lexer *lex, CodeGenVisitor *codegen) {
-    if (auto protoAST = Extern(lex)) {
-        if (auto *fnIR = protoAST->accept(*codegen)) {
-            fprintf(stderr, "\033[1;34m->\033[0m Read extern:\n");
-            fnIR->print(errs());
-        }
-    } else {
-        lex->getTok();
-    }
-}
-
-
-// handle top-level expression
-static void handleTopLevelExpr(Lexer *lex, CodeGenVisitor *codegen) {
-    if (auto fnAST = TopLevelExpr(lex)) {
-        if (auto *fnIR = fnAST->accept(*codegen)) {
-            fprintf(stderr, "\033[1;34m->\033[0m Read top-level expression:\n");
-            fnIR->print(errs());
-        }
-    } else {
-        lex->getTok();
-    }
-}
-
-
-// main loop
-static void mainLoop(Lexer *lex, CodeGenVisitor *codegen) {
-    while (true) {
-        Token t = lex->peekTok();
-        switch (t.tp) {
-            case TOK_EOF:
-                return;
-            case TOK_FN:
-                handleDefinition(lex, codegen);
-                break;
-            case TOK_EXTERN:
-                handleExtern(lex, codegen);
-                break;
-            default:
-                handleTopLevelExpr(lex, codegen);
-                break;
-        }
-    }
-}
-
-
-#define TEST_CODEGEN
+// #define TEST_CODEGEN
 #ifdef TEST_CODEGEN
 int main() {
     InitializeNativeTarget();
@@ -373,47 +312,6 @@ int main() {
     auto codegen = std::make_unique<CodeGenVisitor>();
     std::cout << "Lisa Compiler Ready >" << std::endl;
     mainLoop(lex.get(), codegen.get());
-
-    // InitializeAllTargetInfos();
-    // InitializeAllTargets();
-    // InitializeAllTargetMCs();
-    // InitializeAllAsmParsers();
-    // InitializeAllAsmPrinters();
-    InitializeNativeTarget();
-    InitializeNativeTargetAsmPrinter();
-    InitializeNativeTargetAsmParser();
-    std::string error;
-    auto targetTriple = llvm::sys::getDefaultTargetTriple();
-    auto target = TargetRegistry::lookupTarget(targetTriple, error);
-    if (!target) {
-        errs() << error;
-        return 1;
-    }
-    auto CPU = "generic";
-    auto features = "";
-    TargetOptions opt;
-    auto RM = Optional<Reloc::Model>();
-    auto targetMachine = target->createTargetMachine(
-        targetTriple, CPU, features, opt, RM);
-    auto module = codegen->getModule();
-    module->setDataLayout(targetMachine->createDataLayout());
-    module->setTargetTriple(targetTriple);
-    auto filename = "output.o";
-    std::error_code EC;
-    raw_fd_ostream dest(filename, EC, sys::fs::OF_None);
-    if (EC) {
-        errs() << "Could not open file: " << EC.message();
-        return 1;
-    }
-    legacy::PassManager pass;
-    auto fileType = CGFT_ObjectFile;
-    if (targetMachine->addPassesToEmitFile(pass, dest, nullptr, fileType)) {
-        errs() << "TargetMachine can't emit a file of this type";
-        return 1;
-    }
-    pass.run(*module);
-    dest.flush();
-
     return 0;
 }
 #endif

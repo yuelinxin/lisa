@@ -66,9 +66,7 @@ private:
 public:
     CodeGenVisitor();
     virtual ~CodeGenVisitor() = default;
-    std::unique_ptr<Module> getModule() {
-        return std::move(module);
-    }
+    Module* borrowModule() {return module.get();}
     AllocaInst* createEntryBlockAlloca(Function *theFunction, 
                                        const std::string &varName);
     virtual Value* visit(NumberExprAST *node);

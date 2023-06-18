@@ -2,22 +2,24 @@
 % extern bar(a)
 
 % function definition
-% fn foo(a, b) {
-%     a: a + b
-%     b: a * b + bar(b)
-%     if a = b {
-%         (1 + 2 + a) * (a + (1 + 2))
-%     } else {
-%         a + b
-%         a * (5 + 2)
-%     }
-%     for i in 0 ~ 10 ~ 2 {
-%         b: a + i
-%         for j in 0 ~ 5 {
-%             a: a + j
-%         }
-%     }
-% }
+%%
+    fn foo(a, b) {
+        a: a + b
+        b: a * b + bar(b)
+        if a = b {
+            (1 + 2 + a) * (a + (1 + 2))
+        } else {
+            a + b
+            a * (5 + 2)
+        }
+        for i in 0 ~ 10 ~ 2 {
+            b: a + i
+            for j in 0 ~ 5 {
+                a: a + j
+            }
+        }
+    }
+%%
 
 fn area_of_circle(radius) {
     area: 0

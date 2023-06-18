@@ -25,6 +25,7 @@ add_executable(lisa
         lisa-llvm/src/parser.cpp
         lisa-llvm/src/parser.h
         lisa-llvm/src/ast.h
-        lisa-llvm/src/codegen.cpp)
+        lisa-llvm/src/codegen.cpp
+        lisa-llvm/src/driver.cpp)
 
 target_link_libraries(lisa ${llvm_libs})
