@@ -118,6 +118,8 @@ std::unique_ptr<ExprAST> Primary(Lexer *lex) {
         return IfExpr(lex);
     if (t.tp == TOK_FOR)
         return ForExpr(lex);
+    if (t.tp == TOK_WHILE)
+        return WhileExpr(lex);
     if (t.tp == TOK_RETURN)
         return ReturnExpr(lex);
     if (t.tp == TOK_EOF)
@@ -272,6 +274,34 @@ std::unique_ptr<ForExprAST> ForExpr(Lexer *lex) {
         ERROR("Expected '}'")
     return std::make_unique<ForExprAST>(idName, std::move(start), 
         std::move(end), std::move(step), std::move(body));
+}
+
+
+// while expr -> "while" expression "{" expression* "}"
+std::unique_ptr<WhileExprAST> WhileExpr(Lexer *lex) {
+    Token t;
+    GET_TOK // t is "while"
+    if (!(MATCH_TOK(TOK_WHILE, "while")))
+        ERROR("Expected 'while'")
+    auto cond = Expr(lex);
+    if (!cond)
+        return nullptr;
+    GET_TOK // t is "{"
+    if (!(MATCH_TOK(TOK_SYM, "{")))
+        ERROR("Expected '{'")
+    std::vector<std::unique_ptr<ExprAST>> body;
+    PEEK_TOK // t is "}" or expression
+    while (!(MATCH_TOK(TOK_SYM, "}"))) {
+        auto expr = Expr(lex);
+        if (!expr)
+            return nullptr;
+        body.push_back(std::move(expr));
+        PEEK_TOK // t is "}" or expression
+    }
+    GET_TOK // t is "}"
+    if (!(MATCH_TOK(TOK_SYM, "}")))
+        ERROR("Expected '}'")
+    return std::make_unique<WhileExprAST>(std::move(cond), std::move(body));
 }
 
 

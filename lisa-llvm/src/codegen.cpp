@@ -215,6 +215,32 @@ Value *CodeGenVisitor::visit(ForExprAST *node) {
 }
 
 
+// for WhileExprAST
+Value *CodeGenVisitor::visit(WhileExprAST *node) {
+    Function *theFunction = builder.GetInsertBlock()->getParent();
+    BasicBlock *loopBB = BasicBlock::Create(*context, "loop", theFunction);
+    builder.CreateBr(loopBB);
+    builder.SetInsertPoint(loopBB);
+    for (auto &expr : node->body) {
+        Value *bodyV = expr->accept(*this);
+        if (!bodyV)
+            return nullptr;
+    }
+
+    Value *condV = node->cond->accept(*this);
+    if (!condV)
+        return nullptr;
+    condV = builder.CreateFCmpONE(
+        condV, ConstantFP::get(*context, APFloat(0.0)), "loopcond");
+    
+    BasicBlock *afterBB = BasicBlock::Create(*context, "afterloop", theFunction);
+    builder.CreateCondBr(condV, loopBB, afterBB);
+    builder.SetInsertPoint(afterBB);
+
+    return Constant::getNullValue(Type::getDoubleTy(*context));
+}
+
+
 // for ReturnExprAST
 Value *CodeGenVisitor::visit(ReturnExprAST *node) {
     Value *retVal = node->expr->accept(*this);
