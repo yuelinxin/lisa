@@ -127,7 +127,7 @@ static std::string parseFilenames(int argc, char **argv) {
         exit(1);
     }
     inputFilename = argv[argc - 1];
-    size_t lastDot = inputFilename.find_last_of(".");
+    size_t lastDot = inputFilename.find_last_of('.');
     if (lastDot == std::string::npos)
         outputFilename = inputFilename + ".o";
     else

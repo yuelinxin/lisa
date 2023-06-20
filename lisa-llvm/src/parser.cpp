@@ -341,7 +341,7 @@ std::unique_ptr<FunctionAST> Definition(Lexer *lex) {
         exprs.push_back(std::move(e));
         PEEK_TOK // t is "}" or something else
     }
-    if (exprs.size() == 0)
+    if (exprs.empty())
         ERROR("Expected expression in definition")
     GET_TOK // t is "}"
     if (!(MATCH_TOK(TOK_SYM, "}")))

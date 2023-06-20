@@ -67,7 +67,7 @@ Value *CodeGenVisitor::visit(VariableExprAST *node) {
 Value *CodeGenVisitor::visit(BinaryExprAST *node) {
     // assignment
     if (node->op == ':') {
-        VariableExprAST *lhs = dynamic_cast<VariableExprAST*>(node->lhs.get());
+        auto *lhs = dynamic_cast<VariableExprAST*>(node->lhs.get());
         if (!lhs)
             return codeGenError("invalid assignment target");
         Value *rhsVal = node->rhs->accept(*this);
@@ -126,7 +126,7 @@ Value *CodeGenVisitor::visit(IfExprAST *node) {
     BasicBlock *ifBodyBB = BasicBlock::Create(*context, "ifbody", theFunction);
     BasicBlock *mergeBB = BasicBlock::Create(*context, "ifcont");
     BasicBlock *elseBodyBB = nullptr;
-    if (node->els_body.size() > 0)
+    if (!node->els_body.empty())
         elseBodyBB = BasicBlock::Create(*context, "elsebody");
     builder.CreateCondBr(condV, ifBodyBB, elseBodyBB ? elseBodyBB : mergeBB);
 
@@ -264,7 +264,7 @@ Function *CodeGenVisitor::visit(FunctionAST *node) {
     for (auto &expr : node->body) {
         // if the expr is the last one, generate as return value
         if (expr == node->body.back()) {
-            if (ReturnExprAST *ret = dynamic_cast<ReturnExprAST *>(expr.get())) {
+            if (auto *ret = dynamic_cast<ReturnExprAST *>(expr.get())) {
                 if (!expr->accept(*this)) {
                     theFunction->eraseFromParent();
                     return nullptr;
