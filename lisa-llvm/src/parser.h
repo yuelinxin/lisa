@@ -26,6 +26,7 @@ std::unique_ptr<ExprAST> BinOpRHS(Lexer *lex, int exprPrec,
                                   std::unique_ptr<ExprAST> lhs);
 std::unique_ptr<IfExprAST> IfExpr(Lexer *lex);
 std::unique_ptr<ForExprAST> ForExpr(Lexer *lex);
+std::unique_ptr<WhileExprAST> WhileExpr(Lexer *lex);
 std::unique_ptr<ReturnExprAST> ReturnExpr(Lexer *lex);
 std::unique_ptr<PrototypeAST> Prototype(Lexer *lex);
 std::unique_ptr<FunctionAST> Definition(Lexer *lex);
