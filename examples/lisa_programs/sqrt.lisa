@@ -1,0 +1,17 @@
+fn abs(x) {
+    if x < 0 { 
+        return 0 - x 
+    }
+    return x
+}
+
+fn sqrt(x) {
+    guess: x / 2
+    while 1 {
+        guess_rt: guess * guess
+        if abs(guess_rt - x) < 0.0001 { 
+            return guess 
+        }
+        guess: (guess + x / guess) / 2
+    }
+}

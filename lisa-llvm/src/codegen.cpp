@@ -232,7 +232,7 @@ Value *CodeGenVisitor::visit(WhileExprAST *node) {
         return nullptr;
     condV = builder.CreateFCmpONE(
         condV, ConstantFP::get(*context, APFloat(0.0)), "loopcond");
-    
+
     BasicBlock *afterBB = BasicBlock::Create(*context, "afterloop", theFunction);
     builder.CreateCondBr(condV, loopBB, afterBB);
     builder.SetInsertPoint(afterBB);
