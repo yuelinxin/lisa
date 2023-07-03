@@ -1,6 +1,6 @@
 /**
  * @file codegen.cpp
- * @version 0.1.1
+ * @version 0.1.2
  * @date 2023-04-10
  * 
  * @copyright Copyright Miracle Factory (c) 2023
@@ -30,8 +30,8 @@ CodeGenVisitor::CodeGenVisitor() :
         // fpm->add(createPromoteMemoryToRegisterPass());
         fpm->add(createInstructionCombiningPass());
         fpm->add(createReassociatePass());
-        fpm->add(createGVNPass());
         fpm->add(createCFGSimplificationPass());
+        fpm->add(createGVNPass());
         fpm->doInitialization();
         // module->setDataLayout(jit->getDataLayout());
     }
@@ -243,6 +243,9 @@ Value *CodeGenVisitor::visit(WhileExprAST *node) {
 
 // for ReturnExprAST
 Value *CodeGenVisitor::visit(ReturnExprAST *node) {
+    // Function *theFunction = builder.GetInsertBlock()->getParent();
+    // Attribute attr = Attribute::get(theFunction->getContext(), Attribute::Convergent);
+    // theFunction->addFnAttr(attr);
     Value *retVal = node->expr->accept(*this);
     if (!retVal)
         return nullptr;

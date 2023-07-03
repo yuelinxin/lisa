@@ -1,6 +1,6 @@
 /**
  * @file driver.cpp
- * @version 0.1.1
+ * @version 0.1.2
  * @date 2023-06-18
  * 
  * @copyright Copyright Miracle Factory (c) 2023
@@ -84,7 +84,8 @@ static void mainLoop(Lexer *lex, CodeGenVisitor *codegen) {
 
 
 static void initEnv() {
-    // Initialize the target registry etc.
+    // Initialize the target registry
+    // acquire native target
     InitializeNativeTarget();
     InitializeNativeTargetAsmPrinter();
     InitializeNativeTargetAsmParser();
@@ -107,7 +108,7 @@ static void parseOpt(int argc, char **argv) {
                 std::cout << "-v:  Display version information" << std::endl;
                 exit(0);
             case 'v':
-                std::cout << "Lisa Compiler v0.1.1" << std::endl;
+                std::cout << "Lisa Compiler v0.1.2" << std::endl;
                 std::cout << "Copyright (c) 2023 Miracle Factory" << std::endl;
                 exit(0);
             default:
