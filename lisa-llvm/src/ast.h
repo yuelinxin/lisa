@@ -3,7 +3,7 @@
  * @version 0.1.2
  * @date 2023-04-08
  * 
- * @copyright Copyright Miracle Factory (c) 2023
+ * @copyright Copyright Yuelin Xin (c) 2024
  * 
  */
 
