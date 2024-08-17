@@ -30,8 +30,8 @@ CodeGenVisitor::CodeGenVisitor() :
         // fpm->add(createPromoteMemoryToRegisterPass());
         fpm->add(createInstructionCombiningPass());
         fpm->add(createReassociatePass());
-        fpm->add(createCFGSimplificationPass());
-        fpm->add(createGVNPass());
+        // fpm->add(createCFGSimplificationPass());
+        // fpm->add(createGVNPass());
         fpm->doInitialization();
         // module->setDataLayout(jit->getDataLayout());
     }

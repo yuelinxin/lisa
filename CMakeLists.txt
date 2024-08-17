@@ -3,6 +3,9 @@ project(lisa)
 
 set(CMAKE_CXX_STANDARD 14)
 
+# using llvm 14, supply your llvm 14 install here
+set(CMAKE_PREFIX_PATH "/opt/homebrew/opt/llvm@14")
+
 find_package(LLVM REQUIRED CONFIG)
 
 include_directories(${LLVM_INCLUDE_DIRS})

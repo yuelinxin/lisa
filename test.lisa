@@ -1,0 +1,25 @@
+fn abs_lisa(x) {
+    if x < 0 { 
+        return 0 - x 
+    }
+    return x
+}
+
+fn sqrt_lisa(x) {
+    guess: x / 2
+    while 1 {
+        guess_rt: guess * guess
+        if abs_lisa(guess_rt - x) < 0.00001 { 
+            return guess 
+        }
+        guess: (guess + x / guess) / 2
+    }
+}
+
+fn fib_lisa(x) {
+    if x < 3 {
+        return 1
+    }
+    res: fib_lisa(x - 1) + fib_lisa(x - 2)
+    return res
+}
